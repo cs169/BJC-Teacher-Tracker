@@ -50,7 +50,7 @@ Given(/the following teachers exist/) do |teachers_table|
     education_level: 1,
     more_info: "default more_info",
     admin: false,
-    personal_website: "https://www.school.edu/teacher",
+    personal_website: "",
     application_status: "Not Reviewed",
     languages: ["English"],
     session_count: 1,

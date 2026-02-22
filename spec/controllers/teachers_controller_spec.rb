@@ -15,7 +15,7 @@ RSpec.describe TeachersController, type: :controller do
     short_app = Teacher.find_by(first_name: "Short")
     post :create, params: { teacher: { first_name: "First", last_name: "Last", status: 0, education_level: 0,
                                        password: "pa33word!", more_info: "info",
-                                       school_id: short_app.school_id, personal_website: "https://www.example.edu" },
+                                       school_id: short_app.school_id },
                             email: { primary: "new@user.com" }
     }
     user = Teacher.find_by(first_name: "First")
@@ -28,7 +28,7 @@ RSpec.describe TeachersController, type: :controller do
     short_app = Teacher.find_by(first_name: "Short")
     post :create, params: { teacher: { first_name: "First", last_name: "Last", status: 0, education_level: 0,
                                        password: "pa33word!", more_info: "info",
-                                       school_id: short_app.school_id, personal_website: "https://www.example.edu" },
+                                       school_id: short_app.school_id },
                             email: { primary: "new@user.com" }
     }
     user = Teacher.find_by(first_name: "First")
@@ -42,7 +42,7 @@ RSpec.describe TeachersController, type: :controller do
     session_count_orig = short_app.session_count
     post :create, params: { teacher: { first_name: "Short", last_name: "Last", status: 0, education_level: 0,
                                        password: "pa33word!", more_info: "info",
-                                       school_id: short_app.school_id, personal_website: "https://www.example.edu" },
+                                       school_id: short_app.school_id },
                             email: { primary: short_app.primary_email }
     }
     expect(Teacher.find_by(first_name: "Short").session_count).to eq session_count_orig
@@ -170,8 +170,7 @@ RSpec.describe TeachersController, type: :controller do
           status: 0,
           snap: "valid_example",
           admin: true,
-          school_id: School.first.id,
-          personal_website: "https://www.validexample.edu"
+          school_id: School.first.id
         },
         email: {
           primary: "valid_example@validexample.edu",
@@ -193,7 +192,6 @@ RSpec.describe TeachersController, type: :controller do
           application_status: "validated",
           snap: "valid_example",
           school_id: School.first.id,
-          personal_website: "https://www.validexample.edu"
         },
         email: {
           primary: "valid_example@validexample.edu",
