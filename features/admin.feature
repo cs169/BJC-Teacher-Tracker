@@ -235,6 +235,22 @@ Feature: basic admin functionality
     And   I should see "Email"
     And   I should see "Personal or Course Website"
 
+  Scenario: Admin can see verification notes on teacher profile
+    Given the following schools exist:
+      | name        |     country     | city     | state | website                  | grade_level | school_type |
+      | UC Berkeley |       US        | Berkeley | CA    | https://www.berkeley.edu | university  | public      |
+    Given the following teachers exist:
+      | first_name | last_name | admin | primary_email             | school      | snap   | verification_notes                                 |
+      | Joseph     | Test      | false | testteacher@berkeley.edu  | UC Berkeley | alonzo | Principal contact: principal@berkeley.edu         |
+    Given I am on the BJC home page
+    Given I have an admin email
+    And   I follow "Log In"
+    Then  I can log in with Google
+    When  I go to the teachers page
+    When  I follow "Joseph Test"
+    Then  I should see "Verification Notes"
+    And   I should see "Principal contact: principal@berkeley.edu"
+
   Scenario: Edit teacher info as an admin navigating from view only page to edit page
     Given the following schools exist:
       |       name      |     country     |     city     |  state  |            website            |  grade_level  |  school_type  |
