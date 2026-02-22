@@ -73,6 +73,39 @@ RSpec.describe Teacher, type: :model do
     expect(teacher.display_education_level).to eq "?"
   end
 
+  describe "personal_website validation" do
+    it "is invalid on create without personal_website" do
+      new_teacher = Teacher.new(
+        first_name: "New",
+        last_name: "Teacher",
+        status: 0,
+        school: teacher.school,
+        more_info: "info",
+        languages: ["English"]
+      )
+      expect(new_teacher).not_to be_valid
+      expect(new_teacher.errors[:personal_website]).to include("can't be blank")
+    end
+
+    it "is valid on create with personal_website" do
+      new_teacher = Teacher.new(
+        first_name: "New",
+        last_name: "Teacher",
+        status: 0,
+        school: teacher.school,
+        more_info: "info",
+        languages: ["English"],
+        personal_website: "https://www.school.edu"
+      )
+      expect(new_teacher).to be_valid
+    end
+
+    it "allows existing teacher with blank personal_website to update" do
+      teacher.update_column(:personal_website, nil)
+      expect(teacher.update(more_info: "updated")).to be true
+    end
+  end
+
   describe "teacher with info_needed application status" do
     let(:teacher) { teachers(:reimu) }
 
