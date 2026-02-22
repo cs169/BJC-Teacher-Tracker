@@ -173,11 +173,11 @@ namespace :demo do
       next if country == "US" && state.blank?
 
       {
-        name:        name,
+        name:,
         city:        city.presence || "Unknown",
-        state:       state,
-        country:     country,
-        website:     website,
+        state:,
+        country:,
+        website:,
         grade_level: GRADE_LEVEL_MAP[grade] || 2,
         school_type: 0,
         lat:         nil,
@@ -197,7 +197,7 @@ namespace :demo do
       {
         name:        "#{Faker::Educator.university} #{["Academy", "Charter School", "High School"].sample}",
         city:        Faker::Address.city,
-        state:       state,
+        state:,
         country:     "US",
         website:     Faker::Internet.url,
         grade_level: GRADE_LEVEL_MAP.values.sample,
@@ -305,16 +305,16 @@ namespace :demo do
 
         teacher = FactoryBot.create(
           :teacher,
-          first_name:         first_name,
-          last_name:          last_name,
-          snap:               snap,
-          school:             school,
+          first_name:,
+          last_name:,
+          snap:,
+          school:,
           status:             teacher_statuses.sample,
           application_status: application_statuses.sample,
           admin:              false,
           personal_website:   [Faker::Internet.url, nil].sample,
         )
-        teacher.email_addresses.find_by(primary: true).update!(email: email)
+        teacher.email_addresses.find_by(primary: true).update!(email:)
         teachers << teacher
       rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotUnique => e
         Rails.logger.debug "Skipping teacher: #{e.message}"
@@ -408,7 +408,7 @@ namespace :demo do
       start_date = Faker::Date.between(from: 1.year.ago, to: 1.year.from_now)
       end_date   = start_date + rand(1..5)
 
-      ProfessionalDevelopment.find_or_create_by(name: name) do |pd|
+      ProfessionalDevelopment.find_or_create_by(name:) do |pd|
         pd.city        = Faker::Address.city
         pd.state       = state
         pd.country     = "US"
@@ -431,7 +431,7 @@ namespace :demo do
       attendees = validated.sample(rand(5..15))
       attendees.each_with_index do |teacher, i|
         PdRegistration.create!(
-          teacher:                  teacher,
+          teacher:,
           professional_development: pd,
           role:                     i.zero? ? "leader" : "attendee",
           attended:                 [true, false].sample,
