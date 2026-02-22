@@ -91,6 +91,16 @@
       </div>
     </div>
     <div class="row mb-4">
+      <div class="col-sm-3 font-weight-bold">Verification Notes:</div>
+      <div class="col-sm-9">
+        <% if teacher.verification_notes.blank? %>
+          None provided
+        <% else %>
+          <%= teacher.verification_notes %>
+        <% end %>
+      </div>
+    </div>
+    <div class="row mb-4">
       <div class="col-sm-3 font-weight-bold">School:</div>
       <div class="col-sm-9">
         <%= link_to(teacher.school.name, school_path(teacher.school)) %>
