@@ -79,6 +79,11 @@ group :linters, :development, :test do
   gem "rubocop-faker", require: false
 end
 
+group :development, :test do
+  gem "factory_bot_rails"
+  gem "faker"
+end
+
 # setup Cucumber, RSpec support
 group :test do
   gem "rspec-rails"
@@ -88,7 +93,6 @@ group :test do
   gem "simplecov-csv", require: false
   gem "cucumber-rails", require: false
   gem "database_cleaner"
-  gem "factory_bot_rails"
   # gem "metric_fu" # removed until ruby 3.x compat is fixed.
   gem "selenium-webdriver"
 
