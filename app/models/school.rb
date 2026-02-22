@@ -136,6 +136,6 @@ class School < ApplicationRecord
   end
 
   def maps_api_location
-    location.sub("International", "")
+    "#{name}, #{location}".sub("International", "")
   end
 end
