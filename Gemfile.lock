@@ -577,6 +577,7 @@ DEPENDENCIES
   database_cleaner
   debug
   factory_bot_rails
+  faker
   haml-lint
   httparty (~> 0.21.0)
   image_processing (>= 1.2)
