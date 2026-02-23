@@ -47,6 +47,7 @@ admin:
   application_status: Validated
   education_level: -1
   school: stanfurd
+  personal_website: https://example.edu/ye
 
 validated_teacher:
   id: 2
@@ -59,6 +60,7 @@ validated_teacher:
   application_status: Validated
   education_level: -1
   school: berkeley
+  personal_website: https://example.edu/validated
 
 bob:
   id: 3
@@ -70,6 +72,7 @@ bob:
   application_status: Denied
   school: berkeley
   education_level: -1
+  personal_website: https://example.edu/bob
 
 long:
   id: 4
@@ -81,6 +84,7 @@ long:
   more_info: ''
   application_status: Not Reviewed
   education_level: 2
+  personal_website: https://example.edu/long
 
 reimu:
   id: 5
@@ -92,6 +96,7 @@ reimu:
   school: berkeley
   application_status: Info Needed
   education_level: -1
+  personal_website: https://example.edu/reimu
 
 barney:
   id: 6
@@ -103,3 +108,4 @@ barney:
   application_status: Denied
   school: berkeley
   education_level: -1
+  personal_website: https://example.edu/barney
