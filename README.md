@@ -5,8 +5,7 @@ Sp26 Badges:
 [![All Specs](https://github.com/cs169/BJC-Teacher-Tracker-App/actions/workflows/specs.yml/badge.svg)](https://github.com/cs169/BJC-Teacher-Tracker-App/actions/workflows/specs.yml) •
 [![RuboCop](https://github.com/cs169/BJC-Teacher-Tracker-App/actions/workflows/rubocop.yml/badge.svg)](https://github.com/cs169/BJC-Teacher-Tracker-App/actions/workflows/rubocop.yml) •
 [![Maintainability](https://qlty.sh/gh/cs169/projects/BJC-Teacher-Tracker/maintainability.svg)](https://qlty.sh/gh/cs169/projects/BJC-Teacher-Tracker) •
-[![Code Coverage](https://qlty.sh/gh/cs169/projects/BJC-Teacher-Tracker/coverage.svg)](https://qlty.sh/gh/cs169/projects/BJC-Teacher-Tracker) •
-[![Pivotal Tracker](https://user-images.githubusercontent.com/67244883/154180887-f803124e-0156-4322-899d-ba475139d60d.png)](https://www.pivotaltracker.com/n/projects/2406982)
+[![Code Coverage](https://qlty.sh/gh/cs169/projects/BJC-Teacher-Tracker/coverage.svg)](https://qlty.sh/gh/cs169/projects/BJC-Teacher-Tracker)
 
 ---
 
