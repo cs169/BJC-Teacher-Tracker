@@ -34,12 +34,19 @@ jobs:
         with:
           ruby-version: 3.2.3
           bundler-cache: true
+          
       - run: bin/yarn
       - run: bin/rails webpacker:compile
       - run: bundle exec rake db:setup
       - run: bundle exec rake db:migrate
       - name: Run ${{ matrix.suite }}
         run: bundle exec ${{ matrix.suite }}
+
+      - name: CodeCov Coverage
+        uses: codecov/codecov-action@v2
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+
       - name: Upload coverage to Qlty
         uses: qltysh/qlty-action/coverage@v2
         with:

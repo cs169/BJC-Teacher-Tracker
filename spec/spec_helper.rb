@@ -15,16 +15,16 @@
 # it.
 #
 # See http://rubydoc.info/gems/rspec-core/RSpec/Core/Configuration
-require 'simplecov'
-require 'simplecov_json_formatter'
+require "simplecov"
+require "simplecov_json_formatter"
 
 SimpleCov.start do
-    formatter SimpleCov::Formatter::MultiFormatter.new([
-      SimpleCov::Formatter::JSONFormatter,
-      SimpleCov::Formatter::HTMLFormatter
-    ])
-    add_filter '/spec/'
-    add_filter '/features/'
+  formatter SimpleCov::Formatter::MultiFormatter.new([
+    SimpleCov::Formatter::JSONFormatter,
+    SimpleCov::Formatter::HTMLFormatter
+  ])
+  add_filter "/spec/"
+  add_filter "/features/"
 end
 
 RSpec.configure do |config|

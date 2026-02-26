@@ -1,5 +1,5 @@
 # BJC Teacher Tracker
-Sp23 Badges:
+Sp26 Badges:
 
 [![Bluejay Dashboard](https://img.shields.io/badge/Bluejay-Dashboard_BJC%20Teacher%20Tracker-blue.svg)](http://dashboard.bluejay.governify.io/dashboard/script/dashboardLoader.js?dashboardURL=https://reporter.bluejay.governify.io/api/v4/dashboards/tpa-CS169L-23-GH-cs169_BJC-Teacher-Tracker/main) •
 [![All Specs](https://github.com/cs169/BJC-Teacher-Tracker-App/actions/workflows/specs.yml/badge.svg)](https://github.com/cs169/BJC-Teacher-Tracker-App/actions/workflows/specs.yml) •
