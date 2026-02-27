@@ -23,8 +23,6 @@ jobs:
       RAILS_ENV: test
       RUBY_ENV: test
       DISPLAY: ':99' # For chromedriver
-      CCTR: ./cc-test-reporter
-      CC_TEST_REPORTER_ID: "${{ secrets.CC_TEST_REPORTER_ID }}"
     steps:
       - uses: actions/checkout@v2
       - name: Use Node.js
@@ -36,25 +34,22 @@ jobs:
         with:
           ruby-version: 3.2.3
           bundler-cache: true
-      - name: Setup Code Climate
-        run: |
-            curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > $CCTR
-            chmod +x $CCTR
-            $CCTR before-build
+          
       - run: bin/yarn
       - run: bin/rails webpacker:compile
       - run: bundle exec rake db:setup
       - run: bundle exec rake db:migrate
       - name: Run ${{ matrix.suite }}
-        run: |
-          bundle exec ${{ matrix.suite }}
-          $CCTR format-coverage --output coverage/codeclimate.${{ matrix.suite }}.json --input-type simplecov
+        run: bundle exec ${{ matrix.suite }}
+        # continue-on-error: true
+
       - name: CodeCov Coverage
         uses: codecov/codecov-action@v2
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-      # - name: Publish Code Climate
-      #   run: |
-      #    export GIT_BRANCH="${GITHUB_REF/refs\/heads\//}"
-      #    $CCTR sum-coverage coverage/codeclimate.*.json
-      #    $CCTR upload-coverage --id "${{ secrets.CC_TEST_REPORTER_ID }}"
+
+      - name: Upload coverage to Qlty
+        uses: qltysh/qlty-action/coverage@v2
+        with:
+          token: ${{ secrets.QLTY_COVERAGE_TOKEN }}
+          files: coverage/.resultset.json
