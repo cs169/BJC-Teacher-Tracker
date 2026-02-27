@@ -66,6 +66,27 @@ Feature: submit a form as a teacher
     Then  The "#new_teacher" form is invalid
     And   I am on the BJC home page
 
+  Scenario: Missing the compulsory personal website field
+    Given "kpzhu@berkeley.edu" is not in the database
+    Given I am on the BJC home page
+    And   I enter my "First Name" as "Kimberly"
+    And   I enter my "Last Name" as "Zhu"
+    And   I enter my "School Email" as "TESTkpzhu@berkeley.edu"
+    And   I enter my "Snap! Username" as "kpzhu"
+    And   I set my status as "I am teaching BJC as an AP CS Principles course."
+    And   I set my education level target as "High School"
+    And   I fill in "More Information" with "I am after school volunteer"
+    And   I fill in the school name selectize box with "Cupertino High School" and choose to add a new school
+    And   I select "United States" from "Country"
+    And   I enter my "City" as "Cupertino"
+    And   I select "CA" from "State" dropdown
+    And   I enter my "School Website" as "https://chs.fuhsd.org"
+    And   I select "University" from "Grade Level"
+    And   I select "Public" from "School Type"
+    And   I press "Submit"
+    Then  The "#new_teacher" form is invalid
+    And   I am on the BJC home page
+
   Scenario: Websites validation - two invalid websites
     Given I am on the BJC home page
     And I enter my "First Name" as "Jonathan"
@@ -91,6 +112,7 @@ Feature: submit a form as a teacher
     And I enter my "First Name" as "Jonathan"
     And I enter my "Last Name" as "Cena"
     And I enter my "School Email" as "jonathancena@wwe.com"
+    And I enter my "Personal or Course Website" as "https://jonathancena.com"
     And I set my status as "I am teaching BJC as an AP CS Principles course."
     And I set my education level target as "High School"
     And I fill in "More Information" with "I am teaching BJC"
@@ -110,6 +132,7 @@ Feature: submit a form as a teacher
     And I enter my "First Name" as "Jonathan"
     And I enter my "Last Name" as "Cena"
     And I enter my "School Email" as "jonathancena@wwe.com"
+    And I enter my "Personal or Course Website" as "https://jonathancena.com"
     And I set my status as "I am teaching BJC as an AP CS Principles course."
     And I set my education level target as "High School"
     And I fill in "More Information" with "I am teaching BJC"
@@ -131,6 +154,7 @@ Feature: submit a form as a teacher
     And I enter my "First Name" as "Mallory"
     And I enter my "Last Name" as "Moore"
     And I enter my "School Email" as "alice@berkeley.edu"
+    And I enter my "Personal or Course Website" as "https://example.com"
     And I set my status as "I am teaching BJC as an AP CS Principles course."
     And I set my education level target as "High School"
     And I fill in "More Information" with "I am teaching BJC"
@@ -154,6 +178,7 @@ Feature: submit a form as a teacher
     And I enter my "First Name" as "Mallory"
     And I enter my "Last Name" as "Moore"
     And I enter my "School Email" as "mallory@berkeley.edu"
+    And I enter my "Personal or Course Website" as "https://example.com"
     And I enter my "Snap! Username" as "aliceadams"
     And I set my status as "I am teaching BJC as an AP CS Principles course."
     And I fill in "More Information" with "I am teaching BJC"
