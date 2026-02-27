@@ -314,3 +314,20 @@ Scenario: Denied teacher should not see Tags or NCES ID
   When I go to the edit page for Jane Austin
   Then I should not see "Tags"
   And I should not see "NCES ID"
+
+Scenario: Logged in teacher can save verification notes in profile form
+  Given the following schools exist:
+  |       name      |     country     |     city     |  state  |            website            |
+  |   UC Berkeley   |       US        |   Berkeley   |   CA    |   https://www.berkeley.edu    |
+  Given the following teachers exist:
+  | first_name | last_name | admin | primary_email             | school      | snap |
+  | Jane       | Austin    | false | testteacher@berkeley.edu  | UC Berkeley | Jane |
+  Given I have a teacher Google email
+  Given I am on the BJC home page
+  And I follow "Log In"
+  Then I can log in with Google
+  When I go to the edit page for Jane Austin
+  And  I enter my "Verification Notes" as "Principal contact: principal@school.edu"
+  And I press "Update"
+  Then I see a confirmation "Successfully updated your information"
+  And the "verification_notes" of the user with email "testteacher@berkeley.edu" should be "Principal contact: principal@school.edu"
