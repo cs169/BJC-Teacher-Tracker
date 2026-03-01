@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Merge <%= @from_school.name %> into <%= @into_school.name %></title>
+  <style>
+    .school-info {
+      display: flex;
+    }
+
+    .school-info .school {
+      flex: 1;
+    }
+
+    .school-info .school + .school {
+      margin-left: 20px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .title {
+      flex-grow: 1;
+    }
+
+    .button {
+      margin-left: 10px;
+    }
+
+    .btn-green {
+      background-color: green;
+    }
+
+    .btn-orange {
+      background-color: orange;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="title">
+      <%= content_tag :h1, "Preview Merge of #{@from_school.name} into #{@into_school.name}" %>
+    </div>
+    <div class="button">
+      <%= link_to "Switch Merge Order", preview_school_merge_path(from: @into_school.id, into: @from_school.id), method: :get, class: "btn btn-primary switch-merge-button btn-orange" %>
+    </div>
+    <div class="button">
+      <%= link_to "Confirm Merge", school_merge_path(from: @from_school.id, into: @into_school.id), method: :patch, class: "btn btn-primary confirm-merge-button btn-green" %>
+    </div>
+  </div>
+
+  <div class="school-info">
+    <%= tag.div class: 'school' do %>
+      <%= render 'schools/school_info', school: @from_school, display_deletion_warning_icon: true, render_edit: false, render_delete: false, render_smaller: true, is_show_page: false %>
+    <% end %>
+    <%= tag.div class: 'school' do %>
+      <%= render 'schools/school_info', school: @into_school, display_deletion_warning_icon: false, render_edit: false, render_delete: false, render_smaller: true, is_show_page: false %>
+    <% end %>
+    <%= tag.div class: 'school' do %>
+      <%= render 'schools/school_info', school: @result_school, display_deletion_warning_icon: false, render_edit: false, render_delete: false, render_smaller: true, is_show_page: false %>
+    <% end %>
+  </div>
+</body>
+</html>

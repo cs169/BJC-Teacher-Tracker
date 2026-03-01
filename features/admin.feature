@@ -501,3 +501,114 @@ Feature: basic admin functionality
 #  Then I should see "Successfully created/updated 2 teachers"
 #  Then I should see "1 schools has been created"
 #  Then I should see "2 teachers has failed with following emails: [ steve.gao02112@gmail.com ] [ steve.fdso02112@gmail.com ]"
+
+  # ---------------------------------------------------------------------------
+  # School Merge
+  # ---------------------------------------------------------------------------
+
+  Scenario: Admin sees Merge button on school show page
+    Given the following schools exist:
+      | name        | country | city   | state | website                    | grade_level | school_type |
+      | Test School | US      | Irvine | CA    | https://www.testschool.edu | high_school | public      |
+      | Dupe School | US      | Irvine | CA    | https://www.dupeschool.edu | high_school | public      |
+    Given I am on the BJC home page
+    And I have an admin email
+    And I follow "Log In"
+    Then I can log in with Google
+    And I am on the schools page
+    And I follow "Test School"
+    Then I should see "Merge"
+
+  Scenario: Admin sees other schools listed in the merge modal
+    Given the following schools exist:
+      | name        | country | city   | state | website                    | grade_level | school_type |
+      | Test School | US      | Irvine | CA    | https://www.testschool.edu | high_school | public      |
+      | Dupe School | US      | Irvine | CA    | https://www.dupeschool.edu | high_school | public      |
+    Given I am on the BJC home page
+    And I have an admin email
+    And I follow "Log In"
+    Then I can log in with Google
+    And I am on the schools page
+    And I follow "Test School"
+    And I press "Merge"
+    Then I should see "Choose A School To Merge Into"
+    And I should see "Dupe School"
+
+  Scenario: Admin can preview a school merge
+    Given the following schools exist:
+      | name        | country | city   | state | website                    | grade_level | school_type |
+      | Test School | US      | Irvine | CA    | https://www.testschool.edu | high_school | public      |
+      | Dupe School | US      | Irvine | CA    | https://www.dupeschool.edu | high_school | public      |
+    Given I am on the BJC home page
+    And I have an admin email
+    And I follow "Log In"
+    Then I can log in with Google
+    And I am on the schools page
+    And I follow "Test School"
+    And I press "Merge"
+    And I follow "Dupe School"
+    Then I should see "Preview Merge of Test School into Dupe School"
+    And I should see "Switch Merge Order"
+    And I should see "Confirm Merge"
+
+  Scenario: Admin can complete a school merge
+    Given the following schools exist:
+      | name        | country | city   | state | website                    | grade_level | school_type |
+      | Test School | US      | Irvine | CA    | https://www.testschool.edu | high_school | public      |
+      | Dupe School | US      | Irvine | CA    | https://www.dupeschool.edu | high_school | public      |
+    And the following teachers exist:
+      | first_name | last_name | admin | primary_email        | school      |
+      | Teacher    | One       | false | teacher1@example.com | Dupe School |
+    Given I am on the BJC home page
+    And I have an admin email
+    And I follow "Log In"
+    Then I can log in with Google
+    And I am on the schools page
+    And I follow "Test School"
+    And I press "Merge"
+    And I follow "Dupe School"
+    And I follow "Confirm Merge"
+    Then I should see "Schools merged successfully."
+    And I should not see "Test School"
+
+  Scenario: School merge preserves non-blank fields and fills blank fields from from school
+    Given the following schools exist:
+      | name        | country | city   | state | website                    | grade_level | school_type | nces_id   |
+      | Test School | US      | Irvine | CA    | https://www.testschool.edu | high_school | public      | 111111111 |
+      | Dupe School | US      | Irvine | CA    | https://www.dupeschool.edu | high_school | public      |           |
+    Given I am on the BJC home page
+    And I have an admin email
+    And I follow "Log In"
+    Then I can log in with Google
+    And I am on the schools page
+    And I follow "Test School"
+    And I press "Merge"
+    And I follow "Dupe School"
+    And I follow "Confirm Merge"
+    Then I should see "Schools merged successfully."
+    And I follow "Dupe School"
+    And I follow "Edit"
+    Then the "NCES ID" field should contain "111111111"
+    And the "School Website" field should contain "dupeschool.edu"
+    And the "School Website" field should not contain "testschool.edu"
+
+  Scenario: Teachers are re-pointed to surviving school after merge
+    Given the following schools exist:
+      | name        | country | city   | state | website                    | grade_level | school_type |
+      | Test School | US      | Irvine | CA    | https://www.testschool.edu | high_school | public      |
+      | Dupe School | US      | Irvine | CA    | https://www.dupeschool.edu | high_school | public      |
+    And the following teachers exist:
+      | first_name | last_name | admin | primary_email        | school      |
+      | Teacher    | One       | false | teacher1@example.com | Test School |
+    Given I am on the BJC home page
+    And I have an admin email
+    And I follow "Log In"
+    Then I can log in with Google
+    And I am on the schools page
+    And I follow "Test School"
+    And I press "Merge"
+    And I follow "Dupe School"
+    And I follow "Confirm Merge"
+    Then I should see "Schools merged successfully."
+    And I follow "Dupe School"
+    Then I should see "Teacher One"
