@@ -151,6 +151,40 @@ status ONLY IF the person viewing this page is an admin. %>
     </div>
     <small class="col-12 form-text text-muted"><strong id='teacher-more-info-reminder'>Please tell us why you need access.</strong></small>
   </div>
+
+  <%#
+    Verification Notes field (front-end only):
+    - This is intentionally OPTIONAL and is meant to capture fallback verification context.
+    - Product requirement: show this when a teacher cannot satisfy website-based verification.
+    - We keep it visually adjacent to "More Information" so users can provide both rationale
+      and verification details in one pass while completing the application/profile.
+    - Rows are set to 2, per requirement.
+  %>
+  <div class='form-group row'>
+    <div class='col-12'>
+      <%#
+        Label text is explicit so users understand this is for verification context.
+        NOTE: No "required" styling/class since this field must remain optional.
+      %>
+      <%= f.label :verification_notes, "Verification Notes", class: "label-optional" %>
+
+      <%#
+        Optional two-row textbox as requested.
+        We do not add required/pattern constraints because the requirement is to accept
+        free-form, situational notes when website requirements cannot be met.
+      %>
+      <%= f.text_area :verification_notes, class: "form-control", rows: "2" %>
+    </div>
+
+    <%#
+      Required helper copy from the request.
+      Kept as muted helper text for readability and consistency with existing form hints.
+    %>
+    <small class="col-12 form-text text-muted">
+      If your school website does not have your name and email address please provide contact details for a school principal or other administrator who can verify your employment.
+      If you are a home school teacher, please provide details how we can verify your status.
+    </small>
+  </div>
     <%= f.hidden_field :school_id %>
   </div>
 
