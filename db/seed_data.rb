@@ -169,6 +169,7 @@ module SeedData
             admin: true,
             status: 0,
             application_status: "Validated",
+            personal_website: "https://example.com",
             school: School.find_by(name: "UC Berkeley"),
 
             # Note: email field does not exist in the schema of the Teacher model
@@ -183,6 +184,7 @@ module SeedData
             admin: true,
             status: 0,
             application_status: "Validated",
+            personal_website: "https://example.com",
             school: School.find_by(name: "UC Berkeley"),
 
             email: "lmock@berkeley.edu",
