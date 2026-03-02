@@ -44,7 +44,7 @@ RSpec.describe TeachersController, type: :controller do
     # This verifies the end-to-end create path accepts and stores the new optional
     # verification_notes field (strong params + model assignment + persistence).
     post :create, params: { teacher: { first_name: "Verify", last_name: "Notes", status: 0, education_level: 0,
-                                       password: "pa33word!", more_info: "info",
+                                       password: "pa33word!", more_info: "info", personal_website: "www.example.com",
                                        verification_notes: "Principal contact: principal@example.edu",
                                        school_id: short_app.school_id },
                             email: { primary: "verify_notes_#{Time.now.to_i}@user.com" }
