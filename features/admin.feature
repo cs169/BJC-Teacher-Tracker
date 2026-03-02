@@ -374,9 +374,9 @@ Feature: basic admin functionality
      | name        | country | city     | state | website                  | grade_level | school_type |
      | UC Berkeley | US      | Berkeley | CA    | https://www.berkeley.edu | university  | public      |
     And the following teachers exist:
-      | first_name     | last_name   | personal_website  | admin  | primary_email              |  school      | application_status |
-      | Jane           |  Doe        | abc@berkeley.edu  | false  | janedoe@berkeley.edu       |  UC Berkeley | validated          |
-      | Bobby          |  John       |                   | false  | bobbyjohn@berkeley.edu     | UC Berkeley  | denied             |
+      | first_name     | last_name   | personal_website          | admin  | primary_email              |  school      | application_status | snap |
+      | Jane           |  Doe        | https://abc.berkeley.edu  | false  | janedoe@berkeley.edu       |  UC Berkeley | validated          | jdoe |
+      | Bobby          |  John       | https://bob.berkeley.com  | false  | bobbyjohn@berkeley.edu     | UC Berkeley  | denied             |      |
     Given I am on the BJC home page
     And   I have an admin email
     And   I follow "Log In"
@@ -385,12 +385,12 @@ Feature: basic admin functionality
     And I follow "Confirm Merge"
     Then I see a confirmation "Teachers merged successfully"
     And the following entries should not exist in the teachers database:
-      | first_name     | last_name   | personal_website           | admin  | primary_email              | school      | application_status |
-      | Jane           |  Doe        | https://abc.berkeley.edu   | false  | janedoe@berkeley.edu       | UC Berkeley | validated          |
-      | Bobby          |  John       |                            | false  | bobbyjohn@berkeley.edu     | UC Berkeley | denied             |
+      | first_name     | last_name   | personal_website           | admin  | primary_email              | school      | application_status | snap |
+      | Jane           |  Doe        | https://abc.berkeley.edu   | false  | janedoe@berkeley.edu       | UC Berkeley | validated          | jdoe |
+      | Bobby          |  John       | https://bob.berkeley.com   | false  | bobbyjohn@berkeley.edu     | UC Berkeley | denied             |      |
     And the following entries should exist in the teachers database:
-      | first_name     | last_name       | personal_website  | admin  | primary_email              | school       | application_status |
-      | Bobby          |  John           | abc@berkeley.edu  | false  | bobbyjohn@berkeley.edu     | UC Berkeley  | denied             |
+      | first_name     | last_name       | personal_website          | admin  | primary_email              | school       | application_status | snap |
+      | Bobby          |  John           | https://bob.berkeley.com  | false  | bobbyjohn@berkeley.edu     | UC Berkeley  | denied             | jdoe |
 
   Scenario: Merging teachers sums session counts, concatenates IP histories, and saves most recent datetime
     Given the following schools exist:
