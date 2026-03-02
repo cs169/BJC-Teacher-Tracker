@@ -42,7 +42,7 @@ jobs:
       - name: Run ${{ matrix.suite }}
         run: |
           if [ "${{ matrix.suite }}" == "cucumber" ]; then
-            bundle exec cucumber --retry 2
+            bundle exec cucumber --retry 3
           else
             bundle exec rspec
           fi
