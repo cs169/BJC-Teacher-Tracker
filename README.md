@@ -1,12 +1,11 @@
 # BJC Teacher Tracker
-Sp23 Badges:
+Sp26 Badges:
 
 [![Bluejay Dashboard](https://img.shields.io/badge/Bluejay-Dashboard_BJC%20Teacher%20Tracker-blue.svg)](http://dashboard.bluejay.governify.io/dashboard/script/dashboardLoader.js?dashboardURL=https://reporter.bluejay.governify.io/api/v4/dashboards/tpa-CS169L-23-GH-cs169_BJC-Teacher-Tracker/main) •
 [![All Specs](https://github.com/cs169/BJC-Teacher-Tracker-App/actions/workflows/specs.yml/badge.svg)](https://github.com/cs169/BJC-Teacher-Tracker-App/actions/workflows/specs.yml) •
 [![RuboCop](https://github.com/cs169/BJC-Teacher-Tracker-App/actions/workflows/rubocop.yml/badge.svg)](https://github.com/cs169/BJC-Teacher-Tracker-App/actions/workflows/rubocop.yml) •
-[![Maintainability](https://api.codeclimate.com/v1/badges/9bedc69e2aa0c0b704cd/maintainability)](https://codeclimate.com/github/cs169/BJC-Teacher-Tracker/maintainability) •
-[![Test Coverage](https://api.codeclimate.com/v1/badges/9bedc69e2aa0c0b704cd/test_coverage)](https://codeclimate.com/github/cs169/BJC-Teacher-Tracker/test_coverage) •
-[![Pivotal Tracker](https://user-images.githubusercontent.com/67244883/154180887-f803124e-0156-4322-899d-ba475139d60d.png)](https://www.pivotaltracker.com/n/projects/2406982)
+[![Maintainability](https://qlty.sh/gh/cs169/projects/BJC-Teacher-Tracker/maintainability.svg)](https://qlty.sh/gh/cs169/projects/BJC-Teacher-Tracker) •
+[![Code Coverage](https://qlty.sh/gh/cs169/projects/BJC-Teacher-Tracker/coverage.svg)](https://qlty.sh/gh/cs169/projects/BJC-Teacher-Tracker)
 
 ---
 
