@@ -35,7 +35,7 @@ class School < ApplicationRecord
   validates :grade_level, presence: true
   validates :school_type, presence: true
 
-  before_save :update_gps_data, if: -> { lat.nil? || lng.nil? || location_changed? }
+  before_save :update_gps_data, if: -> { lat.nil? || lng.nil? || location_changed? || name_changed? }
 
   has_many :teachers
   scope :validated, -> { where("teachers_count > 0") }

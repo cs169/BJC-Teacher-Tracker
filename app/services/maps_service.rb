@@ -11,5 +11,5 @@ module MapsService
     return nil if response["status"] != "OK"
 
     response["results"][0]["geometry"]["location"].with_indifferent_access
-    end
+  end
 end

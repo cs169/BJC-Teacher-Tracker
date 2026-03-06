@@ -150,12 +150,15 @@ module SeedData
   end
 
   def self.create_schools
-    School.find_or_create_by(
+    school = School.find_or_initialize_by(
       name: "UC Berkeley",
       city: "Berkeley",
-      country: "US",
-      website: "https://bjc.berkeley.edu",
       state: "CA",
+      country: "US"
+    )
+
+    school.update!(
+      website: "https://bjc.berkeley.edu",
       grade_level: 4,
       school_type: 0
     )
