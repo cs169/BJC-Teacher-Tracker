@@ -5,42 +5,43 @@ class EmailAddressesController < ApplicationController
   before_action :require_admin
   before_action :set_teacher
 
-  def edit
+  def create
+    emails = params[:emails] || []
+    if emails.empty?
+      redirect_to teacher_path(@teacher), alert: "No emails provided."
+      return
+    end
+
+    EmailAddress.transaction do
+      emails.each do |email|
+        next if email.blank?
+        @teacher.email_addresses.create!(email:, primary: false)
+      end
+    end
+    redirect_to teacher_path(@teacher), notice: "Personal email addresses added successfully."
+  rescue ActiveRecord::RecordInvalid => e
+    error_message = e.record&.errors&.full_messages&.join(", ")
+    error_message ||= "A validation error occurred."
+    redirect_to teacher_path(@teacher), alert: error_message
   end
 
-  def update
-    if update_personal_emails
-      redirect_to teacher_path(@teacher), notice: "Personal email addresses updated successfully."
-    else
-      flash.now[:alert] = "An error occurred: " + (@error_messages || "Unknown error")
-      render :edit
+  def destroy
+    email = EmailAddress.find(params[:id])
+    if email.teacher_id != @teacher.id
+      redirect_to teacher_path(@teacher), alert: "Email address not found."
+      return
     end
+
+    email.destroy!
+    redirect_to teacher_path(@teacher), notice: "Email address deleted successfully."
+  rescue ActiveRecord::RecordNotFound
+    redirect_to teacher_path(@teacher), alert: "Email address not found."
+  rescue ActiveRecord::RecordNotDestroyed
+    redirect_to teacher_path(@teacher), alert: "Could not delete email address."
   end
 
   private
   def set_teacher
     @teacher = Teacher.find(params[:teacher_id])
-  end
-
-  def update_personal_emails
-    EmailAddress.transaction do
-      params[:teacher][:email_addresses_attributes].each do |_, email_attr|
-        if email_attr[:id].present?
-          email = EmailAddress.find(email_attr[:id])
-          if email_attr[:_destroy] == "1"
-            email.destroy!
-          else
-            email.update!(email: email_attr[:email])
-          end
-        else
-          @teacher.email_addresses.create!(email: email_attr[:email]) unless email_attr[:email].blank?
-        end
-      end
-    end
-    true
-  rescue ActiveRecord::RecordInvalid => e
-    @error_messages = e.record&.errors&.full_messages&.join(", ")
-    @error_messages ||= "A validation error occurred, but no specific error details are available."
-    false
   end
 end
