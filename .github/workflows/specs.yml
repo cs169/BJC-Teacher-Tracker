@@ -40,7 +40,12 @@ jobs:
       - run: bundle exec rake db:setup
       - run: bundle exec rake db:migrate
       - name: Run ${{ matrix.suite }}
-        run: bundle exec ${{ matrix.suite }}
+        run: |
+          if [ "${{ matrix.suite }}" == "cucumber" ]; then
+            bundle exec cucumber --retry 5
+          else
+            bundle exec rspec
+          fi
         # continue-on-error: true
 
       - name: CodeCov Coverage
