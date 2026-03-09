@@ -14,7 +14,9 @@
       <% if render_edit %>
         <% button_class = render_smaller ? " btn-sm" : "" %>
         <%= link_to "Edit Information", edit_teacher_path(teacher), class: "btn btn-primary mr-2" + button_class %>
-        <%= link_to "Edit Personal Emails", edit_teacher_email_address_path(teacher), class: "btn btn-secondary mr-2" + button_class %>
+        <% if is_show_page && @is_admin %>
+          <button class="btn btn-secondary mr-2<%= button_class %>" data-toggle="modal" data-target="#emailModal">Edit Personal Emails</button>
+        <% end %>
       <% end %>
      <% if render_delete %>
         <%= link_to("Delete", teacher_path(teacher), method: "delete", class: "btn btn-danger", data: {confirm: "Are you sure?"}) %>
@@ -34,9 +36,14 @@
       <div class="col-sm-3 font-weight-bold">Emails:</div>
         <ul class="list-unstyled col-sm-9">
           <% teacher.email_addresses.each do |email| %>
-            <li class="">
+            <li class="email-list-item">
               <a href="mailto:<%= email.email %>" class="mr-2"><%= email.email %></a>
               <button class="btn btn-sm" onclick="copyToClipboard('<%= email.email %>')"><i class="fa fa-copy"></i></button>
+              <% if @is_admin %>
+                <%= link_to teacher_delete_email_address_path(teacher, email), method: :delete, class: "btn btn-sm btn-link text-danger delete-email-btn p-0 ml-1" do %>
+                  <i class="fa fa-times"></i>
+                <% end %>
+              <% end %>
               <%= email_address_label(email) %>
             </li>
         <% end %></ul>

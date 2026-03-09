@@ -9,7 +9,8 @@ Rails.application.routes.draw do
 
   resources :teachers do
     post "upload_file", on: :member
-    resource :email_address, only: [:edit, :update, :create]
+    resource :email_address, only: [:create]
+    delete "email_addresses/:id", to: "email_addresses#destroy", as: :delete_email_address
     member do
       post :resend_welcome_email
       post :validate

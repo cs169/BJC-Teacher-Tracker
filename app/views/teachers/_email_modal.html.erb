@@ -1,0 +1,54 @@
+<div class="modal fade" id="emailModal" tabindex="-1" role="dialog" aria-labelledby="emailModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="emailModalLabel">Add New Emails</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <%= form_with(url: teacher_email_address_path(teacher), method: :post, local: true, id: "email-modal-form") do |f| %>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="email-selectize">Email Addresses</label>
+            <select id="email-selectize" name="emails[]" multiple style="display: none;">
+            </select>
+            <small class="form-text text-muted">Type an email address and press Enter to add it.</small>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Add Emails</button>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<script>
+$(document).ready(function() {
+  var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  
+  $('#email-selectize').selectize({
+    plugins: ['remove_button'],
+    delimiter: ',',
+    persist: false,
+    create: function(input) {
+      if (emailRegex.test(input)) {
+        return { value: input, text: input };
+      }
+      return false;
+    },
+    createOnBlur: false,
+    createFilter: function(input) {
+      return emailRegex.test(input);
+    }
+  });
+
+  $('#emailModal').on('hidden.bs.modal', function() {
+    var selectize = $('#email-selectize')[0].selectize;
+    if (selectize) {
+      selectize.clear();
+    }
+  });
+});
+</script>

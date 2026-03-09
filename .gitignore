@@ -159,3 +159,6 @@ yarn-debug.log*
 
 # CodeClimate local tests
 cc-test-reporter
+
+# CSV data files
+*.csv
