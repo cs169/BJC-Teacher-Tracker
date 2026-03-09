@@ -61,7 +61,8 @@ RSpec.describe TeachersController, type: :controller do
         first_name: "valid_example",
         last_name: "valid_example",
         status: 0,
-        snap: "valid_example"
+        snap: "valid_example",
+        personal_website: "https://example.com"
       },
       email: {
         primary: "valid_example@validexample.edu",

@@ -10,7 +10,6 @@ class SchoolsController < ApplicationController
 
   def show
     @school = School.find(params[:id])
-    @all_schools_except_current = School.where.not(id: @school.id).order(:name)
   end
 
   def search
