@@ -2,6 +2,10 @@
 
 <%= render 'teacher_info', teacher: @teacher, render_edit: true, render_smaller: false, render_delete: true, display_deletion_warning_icon: false, is_show_page: true %>
 
+<% if @is_admin %>
+  <%= render 'email_modal', teacher: @teacher %>
+<% end %>
+
 <hr>
 <div class='row'>
   <div class='col-12'>
