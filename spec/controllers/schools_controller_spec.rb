@@ -263,12 +263,62 @@ RSpec.describe SchoolsController, type: :controller do
   end
 
   describe "GET #index" do
-    it "assigns all schools ordered by name to @schools" do
-      schools = [double("School", name: "School A"), double("School", name: "School B"), double("School", name: "School C")]
-      allow(School).to receive_message_chain(:all, :order).and_return(schools)
+    let(:dt_columns) do
+      {
+        "0" => { data: "name", searchable: "true", orderable: "true", search: { value: "", regex: "false" } },
+        "1" => { data: "location", searchable: "true", orderable: "true", search: { value: "", regex: "false" } },
+        "2" => { data: "country", searchable: "true", orderable: "true", search: { value: "", regex: "false" } },
+        "3" => { data: "website", searchable: "true", orderable: "true", search: { value: "", regex: "false" } },
+        "4" => { data: "teachers_count", searchable: "false", orderable: "true", search: { value: "", regex: "false" } },
+        "5" => { data: "grade_level", searchable: "true", orderable: "true", search: { value: "", regex: "false" } },
+        "6" => { data: "actions", searchable: "false", orderable: "false", search: { value: "", regex: "false" } }
+      }
+    end
+
+    it "renders the index template for HTML requests" do
       get :index
-      expect(assigns(:schools)).to eq(schools)
       expect(response).to render_template("index")
+    end
+
+    it "returns JSON with datatable keys" do
+      get :index, format: :json, params: { draw: "1", start: "0", length: "10", columns: dt_columns }
+      expect(response.content_type).to include("application/json")
+      body = JSON.parse(response.body)
+      expect(body).to have_key("recordsTotal")
+      expect(body).to have_key("recordsFiltered")
+      expect(body).to have_key("data")
+    end
+
+    it "paginates results via length param" do
+      get :index, format: :json, params: { draw: "1", start: "0", length: "1", columns: dt_columns }
+      body = JSON.parse(response.body)
+      expect(body["data"].length).to be <= 1
+    end
+
+    it "filters results by search value" do
+      get :index, format: :json, params: { draw: "1", start: "0", length: "10",
+        columns: dt_columns, search: { value: "nonexistent_school_xyz", regex: "false" } }
+      body = JSON.parse(response.body)
+      expect(body["recordsFiltered"]).to eq(0)
+      expect(body["data"]).to be_empty
+    end
+
+    it "returns all schools when no search is applied" do
+      get :index, format: :json, params: { draw: "1", start: "0", length: "100",
+        columns: dt_columns, search: { value: "", regex: "false" } }
+      body = JSON.parse(response.body)
+      expect(body["recordsTotal"]).to eq(School.count)
+    end
+
+    it "includes expected fields in each data record" do
+      get :index, format: :json, params: { draw: "1", start: "0", length: "10", columns: dt_columns }
+      body = JSON.parse(response.body)
+      if body["data"].any?
+        record = body["data"].first
+        %w[name location country website teachers_count grade_level actions].each do |key|
+          expect(record).to have_key(key)
+        end
+      end
     end
   end
 
