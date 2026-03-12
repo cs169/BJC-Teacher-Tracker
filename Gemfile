@@ -12,7 +12,7 @@ gem "rails", "6.1.7.7"
 gem "puma", "~> 5"
 gem "pg", "~> 1.5"
 
-# Front-end Assets
+# Front-end Assets``
 gem "webpacker"
 
 # Reduces boot times through caching; required in config/boot.rb
@@ -46,6 +46,7 @@ gem "image_processing", ">= 1.2"
 gem "selectize-rails"
 gem "smarter_csv", "~> 1.4"
 gem "activerecord-import", require: false
+gem "ajax-datatables-rails"
 
 gem "httparty", "~> 0.21.0"
 
