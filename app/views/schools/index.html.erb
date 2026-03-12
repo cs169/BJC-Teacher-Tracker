@@ -1,7 +1,7 @@
 <%= provide(:title, "BJC Schools") %>
 <%= provide(:header_button, "New School") %>
 
-<table class="table table-striped js-dataTable">
+<table class="table table-striped js-schoolDataTable">
   <thead class="thead-dark">
     <tr>
       <th scope="col">Name</th>
@@ -13,24 +13,5 @@
       <th scope="col" width="10ch">Actions</th>
     </tr>
   </thead>
-  <tbody>
-    <% @schools.each_with_index do |school, index| %>
-      <tr>
-        <td><%= link_to(school.name, school_path(school)) %></td>
-        <td><%= school.location %></td>
-        <td><%= school.country %></td>
-        <td>
-          <%= link_to(truncate(school.website, length: 30), school.website, target: "_blank") %>
-        </td>
-        <td><%= school.teachers_count %></td>
-        <td><%= school.display_grade_level %></td>
-        <td>
-          <span class="btn-group">
-            <%= link_to("Edit", edit_school_path(school), class: "btn btn-info") %>
-            <%= link_to("❌", school_path(school), method: "delete", class: "btn btn-outline-danger", data: {confirm: "Are you sure?"}) %>
-          </span>
-        </td>
-      </tr>
-    <% end %>
-  </tbody>
+  <tbody></tbody>
 </table>

@@ -5,7 +5,10 @@ class SchoolsController < ApplicationController
   before_action :require_admin
 
   def index
-    @schools = School.all.order(:name)
+    respond_to do |format|
+      format.html
+      format.json { render json: SchoolDatatable.new(params) }
+    end
   end
 
   def show
