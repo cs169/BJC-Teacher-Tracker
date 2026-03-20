@@ -23,6 +23,29 @@ class MergeController < ApplicationController
     redirect_to teachers_path, notice: "Teachers merged successfully."
   end
 
+  def school_preview
+    @from_school = School.find(params[:from])
+    @into_school = School.find(params[:into])
+    @result_school = merge_schools(@from_school, @into_school)
+  end
+
+  def school_execute
+    @from_school = School.find(params[:from])
+    @into_school = School.find(params[:into])
+    @merged_school = merge_schools(@from_school, @into_school)
+
+    merged_attributes = @merged_school.attributes.except("id", "teachers_count")
+
+    School.transaction do
+      Teacher.where(school_id: @from_school.id).update_all(school_id: @into_school.id)
+      @from_school.destroy
+      @into_school.update_columns(merged_attributes)
+    end
+
+    School.reset_counters(@into_school.id, :teachers)
+    redirect_to schools_path, notice: "Schools merged successfully."
+  end
+
   private
   # TODO: Migrate to a library/service method
   # Returns a merged teacher without saving it to the database.
@@ -56,6 +79,31 @@ class MergeController < ApplicationController
     merged_teacher = Teacher.new(merged_attributes)
     merged_teacher.email_addresses = from_teacher.email_addresses + into_teacher.email_addresses
     merged_teacher
+  end
+
+  # TODO: Migrate to a library/service method
+  def merge_schools(from_school, into_school)
+    merged_attributes = {}
+    into_school.attributes.each do |attr_name, attr_value|
+      from_school_attr_value = from_school.attributes[attr_name]
+      if attr_value.blank?
+        merged_attributes[attr_name] = from_school_attr_value
+      elsif from_school_attr_value.blank?
+        merged_attributes[attr_name] = attr_value
+      else
+        case attr_name
+        when "tags"
+          merged_attributes[attr_name] = (attr_value + from_school_attr_value).uniq
+        when "teachers_count"
+          merged_attributes[attr_name] = attr_value + from_school_attr_value
+        when "created_at"
+          merged_attributes[attr_name] = [attr_value, from_school_attr_value].min
+        else
+          merged_attributes[attr_name] = attr_value
+        end
+      end
+    end
+    School.new(merged_attributes)
   end
 
   # Handle merging EmailAddress records, so they all belong to the saved record.

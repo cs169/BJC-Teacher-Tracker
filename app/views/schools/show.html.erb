@@ -11,6 +11,9 @@
       <div class="col-sm-4 text-right">
         <%= link_to("Edit", edit_school_path(@school), class: "btn btn-primary") %>
         <%= link_to("Delete", school_path(@school), method: "delete", class: "btn btn-danger", data: {confirm: "Are you sure?"}) %>
+        <% if @is_admin %>
+          <button id="school-merge-button" class="btn btn-warning">Merge</button>
+        <% end %>
       </div>
     </div>
   </div>
@@ -85,3 +88,42 @@
     </div>
   </div>
 </div>
+
+<!-- School Merge Modal -->
+<div id="school-merge-modal" class="merge_modal">
+  <div class="merge_modal-content">
+    <h2>Choose A School To Merge Into</h2>
+    <span class="close">&times;</span>
+    <table class="table table-striped js-dataTable">
+      <thead class="thead-dark">
+        <tr>
+          <th>Name</th>
+          <th>Location</th>
+          <th>Grade Level</th>
+          <th>Teachers</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @all_schools_except_current.each do |school| %>
+          <tr>
+            <td>
+              <%= link_to school.name, preview_school_merge_path(from: @school.id, into: school.id), method: :get %>
+            </td>
+            <td><%= school.location %></td>
+            <td><%= school.display_grade_level %></td>
+            <td><%= school.teachers_count %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  $(document).ready(function() {
+    let modal = $('#school-merge-modal');
+
+    $('#school-merge-button').click(() => modal.show());
+    $('.close').click(() => modal.hide());
+  });
+</script>

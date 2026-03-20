@@ -1,0 +1,91 @@
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h3><%= school.name %>
+      <% if display_deletion_warning_icon %>
+        <p style="font-size: smaller;">
+          ❌
+        </p>
+      <% end %>
+    </h3>
+    <div>
+      <% if is_show_page && @is_admin %>
+        <button id="school-merge-button" class="btn btn-warning mr-2">Merge</button>
+      <% end %>
+      <% if render_edit %>
+        <% button_class = render_smaller ? " btn-sm" : "" %>
+        <%= link_to "Edit", edit_school_path(school), class: "btn btn-primary mr-2" + button_class %>
+      <% end %>
+      <% if render_delete %>
+        <%= link_to("Delete", school_path(school), method: "delete",
+              class: "btn btn-danger" + (render_smaller ? " btn-sm" : ""),
+              data: { confirm: "Are you sure?" }) %>
+      <% end %>
+    </div>
+  </div>
+  <div class="card-body">
+    <% if @is_admin %>
+      <div class="row mb-4">
+        <div class="col-sm-3 font-weight-bold">School ID:</div>
+        <div class="col-sm-9">
+          <%= school.id %>
+        </div>
+      </div>
+    <% end %>
+    <div class="row mb-4">
+      <div class="col-sm-3 font-weight-bold">Name:</div>
+      <div class="col-sm-9">
+        <%= school.name %>
+      </div>
+    </div>
+    <div class="row mb-4">
+      <div class="col-sm-3 font-weight-bold">Location:</div>
+      <div class="col-sm-9">
+        <%= school.location %>
+      </div>
+    </div>
+    <div class="row mb-4">
+      <div class="col-sm-3 font-weight-bold">Website:</div>
+      <div class="col-sm-9">
+        <% if school.website.present? %>
+          <%= link_to(school.website, school.website) %>
+        <% end %>
+      </div>
+    </div>
+    <div class="row mb-4">
+      <div class="col-sm-3 font-weight-bold">Grade Level:</div>
+      <div class="col-sm-9">
+        <%= school.display_grade_level %>
+      </div>
+    </div>
+    <div class="row mb-4">
+      <div class="col-sm-3 font-weight-bold">School Type:</div>
+      <div class="col-sm-9">
+        <%= school.school_type %>
+      </div>
+    </div>
+    <div class="row mb-4">
+      <div class="col-sm-3 font-weight-bold">Tags:</div>
+      <div class="col-sm-9">
+        <%= school.tags.join(", ") if school.tags.present? %>
+      </div>
+    </div>
+    <div class="row mb-4">
+      <div class="col-sm-3 font-weight-bold">NCES ID:</div>
+      <div class="col-sm-9">
+        <%= school.nces_id %>
+      </div>
+    </div>
+    <div class="row mb-4">
+      <div class="col-sm-3 font-weight-bold">Number of Teachers:</div>
+      <div class="col-sm-9">
+        <%= school.teachers_count %>
+      </div>
+    </div>
+    <div class="row mb-4">
+      <div class="col-sm-3 font-weight-bold">Date Added:</div>
+      <div class="col-sm-9">
+        <%= school.created_at %>
+      </div>
+    </div>
+  </div>
+</div>
