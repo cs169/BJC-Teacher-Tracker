@@ -27,6 +27,7 @@ $fa-font-path: '~@fortawesome/fontawesome-free/webfonts';
 @import 'merge_modal';
 @import './sidebar.scss';
 @import "./selectize.scss";
+@import "datatable_sorting";
 
 html {
   min-height: 100%;
