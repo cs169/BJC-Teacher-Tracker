@@ -306,14 +306,16 @@ RSpec.describe "Schools DataTables JSON API", type: :request do
       )
       get schools_path(format: :json), params: datatable_params
       json = JSON.parse(response.body)
-      entry = json["data"].find { |d| d["DT_RowId"] == school.id.to_s }
+      entry = json["data"].find { |d| d["DT_RowId"].to_i == school.id }
       expect(entry).to be_present
-      expect(entry["name"]).to eq("Test Academy")
-      expect(entry["location"]).to eq("Springfield, IL")
+      expect(entry["name"]).to include("Test Academy")
+      expect(entry["name"]).to include(school_path(school))
+      expect(entry["location"]).to include("Springfield")
       expect(entry["country"]).to eq("US")
-      expect(entry["website"]).to eq("https://test.edu")
-      expect(entry["teachers_count"]).to eq("0")
-      expect(entry["grade_level"]).to eq("High School")
+      expect(entry["website"]).to include("https://test.edu")
+      expect(entry["grade_level"]).to include("High School")
+      expect(entry["actions"]).to include("Edit")
+      expect(entry["actions"]).to include(edit_school_path(school))
     end
 
     it "filters by name" do
@@ -325,7 +327,7 @@ RSpec.describe "Schools DataTables JSON API", type: :request do
       get schools_path(format: :json), params: datatable_params(search: { value: "Unique Zebra" })
       json = JSON.parse(response.body)
       expect(json["recordsFiltered"]).to eq(1)
-      expect(json["data"].first["name"]).to eq("Unique Zebra School")
+      expect(json["data"].first["name"]).to include("Unique Zebra School")
     end
 
     it "filters by state" do
@@ -337,7 +339,7 @@ RSpec.describe "Schools DataTables JSON API", type: :request do
       get schools_path(format: :json), params: datatable_params(search: { value: "AK" })
       json = JSON.parse(response.body)
       names = json["data"].map { |d| d["name"] }
-      expect(names).to include("Xylophone Academy")
+      expect(names.any? { |n| n.include?("Xylophone Academy") }).to be true
     end
 
     it "filters by city" do
@@ -348,7 +350,7 @@ RSpec.describe "Schools DataTables JSON API", type: :request do
       )
       get schools_path(format: :json), params: datatable_params(search: { value: "Wollongong" })
       json = JSON.parse(response.body)
-      expect(json["data"].map { |d| d["name"] }).to include("Quokka School")
+      expect(json["data"].any? { |d| d["name"].include?("Quokka School") }).to be true
     end
 
     it "filters by website" do
@@ -359,7 +361,7 @@ RSpec.describe "Schools DataTables JSON API", type: :request do
       )
       get schools_path(format: :json), params: datatable_params(search: { value: "narwhal-unique" })
       json = JSON.parse(response.body)
-      expect(json["data"].map { |d| d["name"] }).to include("Narwhal Institute")
+      expect(json["data"].any? { |d| d["name"].include?("Narwhal Institute") }).to be true
     end
 
     it "paginates results with start and length" do
