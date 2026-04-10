@@ -6,7 +6,7 @@ class SchoolsController < ApplicationController
 
   def index
     respond_to do |format|
-      format.html { @schools = School.all.order(:name) }
+      format.html
       format.json { render json: SchoolDatatable.new(params) }
     end
   end
