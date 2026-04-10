@@ -315,6 +315,52 @@ RSpec.describe "Schools DataTables JSON API", type: :request do
       expect(entry["teachers_count"]).to eq("0")
       expect(entry["grade_level"]).to eq("High School")
     end
+
+    it "filters by name" do
+      School.create!(
+        name: "Unique Zebra School", city: "Denver", state: "CO",
+        country: "US", website: "https://zebra.edu",
+        grade_level: :high_school, school_type: :public
+      )
+      get schools_path(format: :json), params: datatable_params(search: { value: "Unique Zebra" })
+      json = JSON.parse(response.body)
+      expect(json["recordsFiltered"]).to eq(1)
+      expect(json["data"].first["name"]).to eq("Unique Zebra School")
+    end
+
+    it "filters by state" do
+      School.create!(
+        name: "Xylophone Academy", city: "Juneau", state: "AK",
+        country: "US", website: "https://xylophone.edu",
+        grade_level: :high_school, school_type: :public
+      )
+      get schools_path(format: :json), params: datatable_params(search: { value: "AK" })
+      json = JSON.parse(response.body)
+      names = json["data"].map { |d| d["name"] }
+      expect(names).to include("Xylophone Academy")
+    end
+
+    it "filters by city" do
+      School.create!(
+        name: "Quokka School", city: "Wollongong", state: "NSW",
+        country: "AU", website: "https://quokka.edu",
+        grade_level: :high_school, school_type: :public
+      )
+      get schools_path(format: :json), params: datatable_params(search: { value: "Wollongong" })
+      json = JSON.parse(response.body)
+      expect(json["data"].map { |d| d["name"] }).to include("Quokka School")
+    end
+
+    it "filters by website" do
+      School.create!(
+        name: "Narwhal Institute", city: "Oslo", state: "Oslo",
+        country: "NO", website: "https://narwhal-unique.edu",
+        grade_level: :university, school_type: :public
+      )
+      get schools_path(format: :json), params: datatable_params(search: { value: "narwhal-unique" })
+      json = JSON.parse(response.body)
+      expect(json["data"].map { |d| d["name"] }).to include("Narwhal Institute")
+    end
   end
 end
 

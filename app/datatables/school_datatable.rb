@@ -30,4 +30,16 @@ class SchoolDatatable < AjaxDatatablesRails::ActiveRecord
   def get_raw_records
     School.all
   end
+
+  private
+
+  SEARCHABLE_COLUMNS = %w[name city state country website].freeze
+
+  def filter_records(records)
+    search_value = params.dig(:search, :value).presence
+    return records unless search_value
+
+    conditions = SEARCHABLE_COLUMNS.map { |col| "schools.#{col} ILIKE :q" }.join(" OR ")
+    records.where(conditions, q: "%#{search_value}%")
+  end
 end
