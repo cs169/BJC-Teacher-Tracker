@@ -254,6 +254,29 @@ RSpec.describe SchoolsController, type: :request do
   end
 end
 
+RSpec.describe "Schools DataTables JSON API", type: :request do
+  fixtures :all
+
+  let(:admin_teacher) { teachers(:admin) }
+
+  before { log_in(admin_teacher) }
+
+  describe "GET /schools.json" do
+    it "returns JSON with DataTables structure" do
+      get schools_path(format: :json), params: {
+        draw: "1", start: "0", length: "25",
+        search: { value: "" }
+      }
+      expect(response).to have_http_status(:ok)
+      json = JSON.parse(response.body)
+      expect(json).to have_key("draw")
+      expect(json).to have_key("recordsTotal")
+      expect(json).to have_key("recordsFiltered")
+      expect(json).to have_key("data")
+    end
+  end
+end
+
 RSpec.describe SchoolsController, type: :controller do
   let(:school) { double("School", id: 1, name: "Test School") }
 
