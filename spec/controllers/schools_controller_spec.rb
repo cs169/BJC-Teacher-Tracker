@@ -261,18 +261,59 @@ RSpec.describe "Schools DataTables JSON API", type: :request do
 
   before { log_in(admin_teacher) }
 
+  def datatable_params(overrides = {})
+    {
+      draw: "1", start: "0", length: "100",
+      search: { value: "" },
+      columns: {
+        "0" => { data: "name", searchable: "true", orderable: "true", search: { value: "" } },
+        "1" => { data: "location", searchable: "true", orderable: "true", search: { value: "" } },
+        "2" => { data: "country", searchable: "true", orderable: "true", search: { value: "" } },
+        "3" => { data: "website", searchable: "true", orderable: "true", search: { value: "" } },
+        "4" => { data: "teachers_count", searchable: "false", orderable: "true", search: { value: "" } },
+        "5" => { data: "grade_level", searchable: "false", orderable: "true", search: { value: "" } },
+        "6" => { data: "actions", searchable: "false", orderable: "false", search: { value: "" } }
+      },
+      order: { "0" => { column: "0", dir: "asc" } }
+    }.deep_merge(overrides)
+  end
+
   describe "GET /schools.json" do
     it "returns JSON with DataTables structure" do
-      get schools_path(format: :json), params: {
-        draw: "1", start: "0", length: "25",
-        search: { value: "" }
-      }
+      get schools_path(format: :json), params: datatable_params
       expect(response).to have_http_status(:ok)
       json = JSON.parse(response.body)
       expect(json).to have_key("draw")
       expect(json).to have_key("recordsTotal")
       expect(json).to have_key("recordsFiltered")
       expect(json).to have_key("data")
+    end
+
+    it "returns correct recordsTotal and recordsFiltered counts" do
+      total = School.count
+      get schools_path(format: :json), params: datatable_params
+      json = JSON.parse(response.body)
+      expect(json["recordsTotal"]).to eq(total)
+      expect(json["recordsFiltered"]).to eq(total)
+      expect(json["data"].length).to eq(total)
+    end
+
+    it "returns expected attributes for each school record" do
+      school = School.create!(
+        name: "Test Academy", city: "Springfield", state: "IL",
+        country: "US", website: "https://test.edu",
+        grade_level: :high_school, school_type: :public
+      )
+      get schools_path(format: :json), params: datatable_params
+      json = JSON.parse(response.body)
+      entry = json["data"].find { |d| d["DT_RowId"] == school.id.to_s }
+      expect(entry).to be_present
+      expect(entry["name"]).to eq("Test Academy")
+      expect(entry["location"]).to eq("Springfield, IL")
+      expect(entry["country"]).to eq("US")
+      expect(entry["website"]).to eq("https://test.edu")
+      expect(entry["teachers_count"]).to eq("0")
+      expect(entry["grade_level"]).to eq("High School")
     end
   end
 end
