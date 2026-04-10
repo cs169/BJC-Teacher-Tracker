@@ -371,6 +371,13 @@ RSpec.describe "Schools DataTables JSON API", type: :request do
       expect(json["recordsFiltered"]).to eq(total)
     end
   end
+
+  describe "GET /schools (HTML)" do
+    it "renders a table with id schools-table for DataTables init" do
+      get schools_path
+      expect(response.body).to include('id="schools-table"')
+    end
+  end
 end
 
 RSpec.describe SchoolsController, type: :controller do
@@ -382,11 +389,8 @@ RSpec.describe SchoolsController, type: :controller do
   end
 
   describe "GET #index" do
-    it "assigns all schools ordered by name to @schools" do
-      schools = [double("School", name: "School A"), double("School", name: "School B"), double("School", name: "School C")]
-      allow(School).to receive_message_chain(:all, :order).and_return(schools)
+    it "renders the index template" do
       get :index
-      expect(assigns(:schools)).to eq(schools)
       expect(response).to render_template("index")
     end
   end
