@@ -361,6 +361,15 @@ RSpec.describe "Schools DataTables JSON API", type: :request do
       json = JSON.parse(response.body)
       expect(json["data"].map { |d| d["name"] }).to include("Narwhal Institute")
     end
+
+    it "paginates results with start and length" do
+      total = School.count
+      get schools_path(format: :json), params: datatable_params(start: "0", length: "2")
+      json = JSON.parse(response.body)
+      expect(json["data"].length).to eq(2)
+      expect(json["recordsTotal"]).to eq(total)
+      expect(json["recordsFiltered"]).to eq(total)
+    end
   end
 end
 
