@@ -50,6 +50,7 @@ gem "activerecord-import", require: false
 gem "httparty", "~> 0.21.0"
 
 gem "country_select", "~> 8.0"
+gem "ajax-datatables-rails"
 
 group :development do
   gem "annotate"
