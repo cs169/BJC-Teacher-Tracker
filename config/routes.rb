@@ -7,6 +7,8 @@ Rails.application.routes.draw do
   # See how all your routes lay out with "bin/rails routes".
   root to: "main#index"
 
+  post "/webhooks/aws/sns", to: "aws_sns_notifications#create"
+
   resources :teachers do
     post "upload_file", on: :member
     resource :email_address, only: [:create]

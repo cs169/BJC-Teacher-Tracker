@@ -60,6 +60,26 @@ class EmailDeliveryEvent < ApplicationRecord
     ses_message_id.presence || "sns:#{sns_message_id}"
   end
 
+  def send?
+    event_type == "send"
+  end
+
+  def delivery?
+    event_type == "delivery"
+  end
+
+  def bounce?
+    event_type == "bounce"
+  end
+
+  def complaint?
+    event_type == "complaint"
+  end
+
+  def reject?
+    event_type == "reject"
+  end
+
   def suppresses_address?
     complaint? || reject? || permanent_bounce?
   end
