@@ -144,6 +144,18 @@ RSpec.describe MailblusterService, type: :service do
       described_class.create_or_update_lead(teacher)
     end
 
+    it "sets subscribed to false when the primary email is suppressed" do
+      teacher.primary_email_address.update_columns(suppressed_at: Time.current, suppression_reason: "hard_bounce")
+
+      expect(HTTParty).to receive(:post) do |_url, options|
+        body = JSON.parse(options[:body])
+        expect(body["subscribed"]).to be false
+        success_response
+      end
+
+      described_class.create_or_update_lead(teacher)
+    end
+
     it "includes BJC Teacher tag" do
       expect(HTTParty).to receive(:post) do |_url, options|
         body = JSON.parse(options[:body])

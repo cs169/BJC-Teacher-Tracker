@@ -249,4 +249,24 @@ RSpec.describe Teacher, type: :model do
       expect(csv).to include("primary_email_bounced")
     end
   end
+
+  describe "deliverability helpers" do
+    let(:validated_teacher) { teachers(:validated_teacher) }
+
+    it "returns true for marketing_subscribed? when the primary email is deliverable" do
+      expect(validated_teacher.marketing_subscribed?).to be(true)
+    end
+
+    it "returns false for marketing_subscribed? when the primary email is suppressed" do
+      validated_teacher.primary_email_address.update_columns(suppressed_at: Time.current, suppression_reason: "hard_bounce")
+
+      expect(validated_teacher.marketing_subscribed?).to be(false)
+    end
+
+    it "finds teachers with deliverability issues" do
+      validated_teacher.primary_email_address.update_columns(emails_sent: 2, emails_delivered: 0)
+
+      expect(Teacher.with_deliverability_issues).to include(validated_teacher)
+    end
+  end
 end

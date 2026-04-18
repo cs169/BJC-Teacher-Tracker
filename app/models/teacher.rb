@@ -184,7 +184,7 @@ class Teacher < ApplicationRecord
   end
 
   def marketing_subscribed?
-    validated? && primary_email_address&.deliverable?
+    validated? && primary_email_address.present? && primary_email_address.deliverable?
   end
 
   def has_deliverability_issues?
