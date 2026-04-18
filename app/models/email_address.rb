@@ -67,29 +67,24 @@ class EmailAddress < ApplicationRecord
   end
 
   def recalculate_deliverability!
-    sent_count = distinct_message_count(email_delivery_events.trackable)
-    delivered_count = distinct_message_count(email_delivery_events.deliveries)
-    last_event = email_delivery_events.ordered.last
-    suppression_event = email_delivery_events.suppressing.ordered.last
+    events = email_delivery_events.ordered.to_a
+    trackable = events.select { |e| EmailDeliveryEvent::TRACKABLE_EVENT_TYPES.include?(e.event_type) }
+    suppression_event = events.select(&:suppresses_address?).last
 
     update_columns(
-      emails_sent: sent_count,
-      emails_delivered: delivered_count,
-      bounced: email_delivery_events.permanent_bounces.exists?,
+      emails_sent: trackable.map(&:message_reference).uniq.size,
+      emails_delivered: events.select(&:delivery?).map(&:message_reference).uniq.size,
+      bounced: events.any?(&:permanent_bounce?),
       suppressed_at: suppression_event&.event_occurred_at,
       suppression_reason: suppression_reason_for(suppression_event),
       suppression_source: suppression_event&.provider,
-      last_delivery_event_type: last_event&.event_type,
-      last_delivery_event_at: last_event&.event_occurred_at,
+      last_delivery_event_type: events.last&.event_type,
+      last_delivery_event_at: events.last&.event_occurred_at,
       updated_at: Time.current
     )
   end
 
   private
-  def distinct_message_count(relation)
-    relation.to_a.map(&:message_reference).uniq.count
-  end
-
   def suppression_reason_for(event)
     return nil unless event
     return "complaint" if event.complaint?
