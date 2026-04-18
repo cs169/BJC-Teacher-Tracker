@@ -1,6 +1,7 @@
 <% if include_id %>
     <th scope="col">ID</th>
 <% end %>
+<% show_mailbluster = local_assigns.fetch(:show_mailbluster, true) %>
 <th scope="col">Name</th>
 <th scope="col">Email</th>
 <th scope="col">Role</th>
@@ -8,4 +9,6 @@
 <th scope="col">School</th>
 <th scope="col" data-col="status" width="7ch">Approved?</th>
 <th scope="col" width="12ch">Created</th>
+<% if show_mailbluster %>
 <th scope="col" width="8ch">MB Sync</th>
+<% end %>

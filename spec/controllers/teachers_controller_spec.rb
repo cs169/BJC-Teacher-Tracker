@@ -10,6 +10,20 @@ RSpec.describe TeachersController, type: :controller do
     ApplicationController.any_instance.stub(:require_login).and_return(true)
   end
 
+  describe "GET #index" do
+    render_views
+
+    it "hides the MailBluster sync column from the teachers index" do
+      ApplicationController.any_instance.stub(:require_admin).and_return(true)
+
+      get :index
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).not_to include("MB Sync")
+      expect(response.body).not_to include("Not Synced")
+    end
+  end
+
   it "should initialize session count to 1 when teachers signs up (submits app)" do
     ApplicationController.any_instance.stub(:is_admin?).and_return(false)
     short_app = Teacher.find_by(first_name: "Short")

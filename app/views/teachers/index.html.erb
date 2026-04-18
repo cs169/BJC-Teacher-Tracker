@@ -19,13 +19,13 @@
 <table class="table table-striped js-dataTable js-teachersTable">
   <thead class="thead-dark">
     <tr>
-      <%= render 'table_headers', include_id: false %>
+      <%= render 'table_headers', include_id: false, show_mailbluster: false %>
     </tr>
   </thead>
   <tbody>
     <% @all_teachers.each do |teacher| %>
     <tr>
-      <%= render 'teacher', teacher: teacher, merge_table: false %>
+      <%= render 'teacher', teacher: teacher, merge_table: false, show_mailbluster: false %>
     </tr>
     <% end %>
   </tbody>
@@ -37,13 +37,13 @@
 <table class="table table-striped js-dataTable">
   <thead class="thead-dark">
     <tr>
-      <%= render 'table_headers', include_id: false %>
+      <%= render 'table_headers', include_id: false, show_mailbluster: false %>
     </tr>
   </thead>
   <tbody>
     <% @admins.each do |admin| %>
     <tr>
-      <%= render 'teacher', teacher: admin, merge_table: false %>
+      <%= render 'teacher', teacher: admin, merge_table: false, show_mailbluster: false %>
     </tr>
     <% end %>
   </tbody>

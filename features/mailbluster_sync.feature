@@ -33,14 +33,14 @@ Feature: MailBluster email sync
     When I go to the teachers page
     Then I should see a button named "Sync All to MailBluster"
 
-  Scenario: Admin sees MB Sync column in teachers table
+  Scenario: Admin does not see MB Sync column in teachers table
     Given I am on the BJC home page
     Given I have an admin email
     And I follow "Log In"
     Then I can log in with Google
     When I go to the teachers page
-    Then I should see "MB Sync"
-    And I should see "Not Synced"
+    Then I should not see "MB Sync"
+    And I should not see "Not Synced"
 
   Scenario: Admin sees email delivery stats on teacher show page
     Given I am on the BJC home page
