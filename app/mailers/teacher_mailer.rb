@@ -88,35 +88,18 @@ class TeacherMailer < ApplicationMailer
   end
 
   def apply_deliverability_controls
-    return unless @teacher.present?
-    return if message.to.blank?
+    return unless @teacher.present? && message.to.present?
 
-    message.to = filtered_recipients(message.to)
+    suppressed = EmailAddress.suppressed.where(email: message.to.map { |r| r.to_s.strip.downcase }).pluck(:email).to_set
+    message.to = message.to.reject { |r| suppressed.include?(r.to_s.strip.downcase) }
+
     if message.to.blank?
       message.perform_deliveries = false
-      Rails.logger.info("[Deliverability] Suppressed all recipients for TeacherMailer##{action_name} teacher=#{@teacher.id}")
       return
     end
 
-    apply_ses_headers
-  end
-
-  def filtered_recipients(recipients)
-    suppressed_emails = EmailAddress.suppressed.where(email: normalized_recipients(recipients)).pluck(:email)
-    recipients.reject { |recipient| suppressed_emails.include?(recipient.to_s.strip.downcase) }
-  end
-
-  def normalized_recipients(recipients)
-    recipients.map { |recipient| recipient.to_s.strip.downcase }.reject(&:blank?)
-  end
-
-  def apply_ses_headers
-    configuration_set = ENV["AWS_SES_CONFIGURATION_SET"].to_s
-    message["X-SES-CONFIGURATION-SET"] = configuration_set if configuration_set.present?
-    message["X-SES-MESSAGE-TAGS"] = [
-      "app=#{AwsSesEventProcessor::APP_TAG_VALUE}",
-      "teacher_id=#{@teacher.id}",
-      "mailer_action=#{action_name}"
-    ].join(", ")
+    config_set = ENV["AWS_SES_CONFIGURATION_SET"].to_s
+    message["X-SES-CONFIGURATION-SET"] = config_set if config_set.present?
+    message["X-SES-MESSAGE-TAGS"] = "app=#{AwsSesEventProcessor::APP_TAG_VALUE}, teacher_id=#{@teacher.id}, mailer_action=#{action_name}"
   end
 end

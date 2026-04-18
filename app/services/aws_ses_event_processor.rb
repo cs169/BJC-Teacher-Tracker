@@ -1,22 +1,9 @@
 # frozen_string_literal: true
 
-require "json"
-
 class AwsSesEventProcessor
   APP_TAG_KEY = "app"
   APP_TAG_VALUE = "bjc_teacher_tracker"
-
-  EVENT_TYPE_ALIASES = {
-    "send" => "send",
-    "delivery" => "delivery",
-    "bounce" => "bounce",
-    "complaint" => "complaint",
-    "reject" => "reject",
-    "rendering failure" => "renderingfailure",
-    "renderingfailure" => "renderingfailure",
-    "delivery delay" => "deliverydelay",
-    "deliverydelay" => "deliverydelay"
-  }.freeze
+  KNOWN_EVENT_TYPES = %w[send delivery bounce complaint reject renderingfailure deliverydelay].to_set.freeze
 
   def initialize(sns_message_id:, topic_arn:, ses_event:)
     @sns_message_id = sns_message_id
@@ -26,126 +13,80 @@ class AwsSesEventProcessor
 
   def call
     return 0 unless relevant_message?
-
-    recipients.sum { |recipient_email| upsert_event_for(recipient_email) ? 1 : 0 }
+    recipients.count { |email| process_recipient(email) }
   end
 
   private
   attr_reader :sns_message_id, :topic_arn, :ses_event
 
-  def upsert_event_for(recipient_email)
+  def process_recipient(recipient_email)
     email_address = EmailAddress.find_by(email: recipient_email)
     teacher = email_address&.teacher || tagged_teacher
 
     event = EmailDeliveryEvent.find_or_initialize_by(
-      provider: "aws_ses",
-      sns_message_id:,
-      recipient_email:
+      provider: "aws_ses", sns_message_id:, recipient_email:
     )
-
     return false if event.persisted?
 
-    event.assign_attributes(
-      email_address:,
-      teacher:,
-      ses_message_id: mail_payload["messageId"],
-      event_type: normalized_event_type,
-      mailer_action: tag_value("mailer_action"),
-      bounce_type: bounce_payload["bounceType"],
-      bounce_sub_type: bounce_payload["bounceSubType"],
-      complaint_feedback_type: complaint_payload["complaintFeedbackType"],
-      event_occurred_at: occurred_at,
-      message_tags: mail_payload["tags"] || {},
+    event.update!(
+      email_address:, teacher:,
+      ses_message_id: mail["messageId"],
+      event_type: event_type,
+      mailer_action: tag("mailer_action"),
+      bounce_type: detail["bounceType"],
+      bounce_sub_type: detail["bounceSubType"],
+      complaint_feedback_type: detail["complaintFeedbackType"],
+      event_occurred_at: Time.zone.parse((detail["timestamp"] || mail["timestamp"]).to_s),
+      message_tags: mail["tags"] || {},
       payload: ses_event
     )
-    event.save!
 
     email_address&.recalculate_deliverability!
-    enqueue_mailbluster_sync(email_address, teacher, event)
+    SyncTeacherToMailblusterJob.perform_later(teacher.id) if teacher && email_address&.primary? && event.suppresses_address?
     true
   end
 
   def relevant_message?
-    return false if normalized_event_type.blank?
+    return false if event_type.blank?
 
-    app_tag = Array(mail_payload.dig("tags", APP_TAG_KEY)).first
+    app_tag = Array(mail.dig("tags", APP_TAG_KEY)).first
     return true if app_tag == APP_TAG_VALUE
 
-    configuration_set = ENV["AWS_SES_CONFIGURATION_SET"].to_s
-    return false if configuration_set.blank?
-
-    Array(mail_payload.dig("tags", "ses:configuration-set")).include?(configuration_set)
+    config_set = ENV["AWS_SES_CONFIGURATION_SET"].to_s
+    config_set.present? && Array(mail.dig("tags", "ses:configuration-set")).include?(config_set)
   end
 
   def recipients
-    extracted = case normalized_event_type
-    when "bounce"
-      Array(bounce_payload["bouncedRecipients"]).map { |recipient| recipient["emailAddress"] }
-    when "complaint"
-      Array(complaint_payload["complainedRecipients"]).map { |recipient| recipient["emailAddress"] }
-    when "delivery"
-      Array(delivery_payload["recipients"])
-    else
-      Array(mail_payload["destination"])
-    end
-
-    extracted.map { |email| email.to_s.strip.downcase }.reject(&:blank?).uniq
+    raw = case event_type
+          when "bounce"    then Array(detail["bouncedRecipients"]).map { |r| r["emailAddress"] }
+          when "complaint" then Array(detail["complainedRecipients"]).map { |r| r["emailAddress"] }
+          when "delivery"  then Array(detail["recipients"])
+          else                  Array(mail["destination"])
+          end
+    raw.filter_map { |e| e.to_s.strip.downcase.presence }.uniq
   end
 
-  def occurred_at
-    timestamp = case normalized_event_type
-    when "bounce"
-      bounce_payload["timestamp"]
-    when "complaint"
-      complaint_payload["timestamp"]
-    when "delivery"
-      delivery_payload["timestamp"]
-    else
-      mail_payload["timestamp"]
-    end
-
-    Time.zone.parse(timestamp.to_s)
-  end
-
-  def normalized_event_type
-    @normalized_event_type ||= begin
-      raw_type = ses_event["eventType"].presence || ses_event["notificationType"].presence
-      EVENT_TYPE_ALIASES[raw_type.to_s.downcase]
+  def event_type
+    @event_type ||= begin
+      raw = (ses_event["eventType"] || ses_event["notificationType"]).to_s.downcase.delete(" ")
+      raw if KNOWN_EVENT_TYPES.include?(raw)
     end
   end
 
-  def mail_payload
+  def mail
     ses_event.fetch("mail")
   end
 
-  def bounce_payload
-    ses_event.fetch("bounce", {})
-  end
-
-  def complaint_payload
-    ses_event.fetch("complaint", {})
-  end
-
-  def delivery_payload
-    ses_event.fetch("delivery", {})
+  def detail
+    @detail ||= ses_event.fetch(event_type, {})
   end
 
   def tagged_teacher
-    teacher_id = tag_value("teacher_id")
-    return if teacher_id.blank?
-
-    Teacher.find_by(id: teacher_id)
+    id = tag("teacher_id")
+    Teacher.find_by(id: id) if id.present?
   end
 
-  def tag_value(key)
-    Array(mail_payload.dig("tags", key)).first
-  end
-
-  def enqueue_mailbluster_sync(email_address, teacher, event)
-    return unless teacher
-    return unless email_address&.primary?
-    return unless event.suppresses_address?
-
-    SyncTeacherToMailblusterJob.perform_later(teacher.id)
+  def tag(key)
+    Array(mail.dig("tags", key)).first
   end
 end
