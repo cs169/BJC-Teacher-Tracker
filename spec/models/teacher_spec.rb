@@ -268,5 +268,24 @@ RSpec.describe Teacher, type: :model do
 
       expect(Teacher.with_deliverability_issues).to include(validated_teacher)
     end
+
+    it "returns false for marketing_subscribed? when teacher is not validated" do
+      validated_teacher.update_columns(application_status: "Not Reviewed")
+      expect(validated_teacher.marketing_subscribed?).to be(false)
+    end
+
+    it "returns false for marketing_subscribed? when teacher has no primary email" do
+      validated_teacher.email_addresses.update_all(primary: false)
+      expect(validated_teacher.reload.marketing_subscribed?).to be(false)
+    end
+
+    it "has_deliverability_issues? returns true when primary email is suppressed" do
+      validated_teacher.primary_email_address.update_columns(suppressed_at: Time.current)
+      expect(validated_teacher.has_deliverability_issues?).to be(true)
+    end
+
+    it "has_deliverability_issues? returns false when all emails healthy" do
+      expect(validated_teacher.has_deliverability_issues?).to be(false)
+    end
   end
 end
