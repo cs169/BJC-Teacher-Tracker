@@ -24,6 +24,7 @@ Rails.application.routes.draw do
     collection do
       post :import
       get :cross_filter_search
+      get :deliverability_issues
       post :sync_all_mailbluster
     end
   end

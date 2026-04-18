@@ -50,5 +50,27 @@ RSpec.describe TeacherHelper, type: :helper do
       result = email_address_label(email)
       expect(result).to include("bounced")
     end
+
+    it "shows suppressed badge for suppressed email" do
+      email = teacher.email_addresses.first
+      email.update_columns(suppressed_at: Time.current, suppression_reason: "hard_bounce")
+      result = email_address_label(email)
+      expect(result).to include("suppressed")
+    end
+  end
+
+  describe "#deliverability_issue_summary" do
+    it "summarizes suppression and undelivered counts" do
+      email = teacher.email_addresses.first
+      email.update_columns(
+        suppressed_at: Time.current,
+        suppression_reason: "hard_bounce",
+        emails_sent: 4,
+        emails_delivered: 1
+      )
+
+      expect(deliverability_issue_summary(email)).to include("Suppressed (hard bounce)")
+      expect(deliverability_issue_summary(email)).to include("3 undelivered")
+    end
   end
 end

@@ -16,8 +16,21 @@ module TeacherHelper
     labels = []
     labels << '<span class="badge badge-pill badge-primary h6">primary</span>' if email.primary?
     labels << '<span class="badge badge-pill badge-danger h6">bounced</span>' if email.bounced?
+    labels << '<span class="badge badge-pill badge-warning h6">suppressed</span>' if email.suppressed?
     return nil if labels.empty?
     "&nbsp; #{labels.join(' ')}".html_safe
+  end
+
+  def deliverability_issue_summary(email)
+    issues = []
+    if email.suppressed?
+      issues << "Suppressed (#{email.suppression_reason.to_s.tr('_', ' ')})"
+    end
+    if email.has_undelivered?
+      issues << "#{email.undelivered_count} undelivered"
+    end
+
+    issues.presence || ["Healthy"]
   end
 
   def mailbluster_sync_status(teacher)

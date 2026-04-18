@@ -10,11 +10,11 @@ class TeachersController < ApplicationController
   include CsvProcess
 
   before_action :load_pages, only: [:new, :create, :edit, :update]
-  before_action :load_teacher, except: [:new, :index, :create, :import, :search, :cross_filter_search, :sync_all_mailbluster]
+  before_action :load_teacher, except: [:new, :index, :create, :import, :search, :cross_filter_search, :sync_all_mailbluster, :deliverability_issues]
   before_action :sanitize_params, only: [:new, :create, :edit, :update]
   before_action :require_login, except: [:new, :create]
   before_action :require_admin, only: [:validate, :deny, :destroy, :index, :show, :search, :cross_filter_search,
-                                      :sync_mailbluster, :sync_all_mailbluster]
+                                      :sync_mailbluster, :sync_all_mailbluster, :deliverability_issues]
   before_action :require_edit_permission, only: [:edit, :update, :resend_welcome_email]
 
   rescue_from ActiveRecord::RecordNotUnique, with: :deny_access
@@ -36,6 +36,16 @@ class TeachersController < ApplicationController
     @all_teachers_except_current = Teacher.preload(:email_addresses, :school).where.not(id: @teacher.id)
     @school = @teacher.school
     @status = is_admin? ? "Admin" : "Teacher"
+  end
+
+  def deliverability_issues
+    @problem_email_addresses = EmailAddress.includes(:teacher)
+      .joins(:teacher)
+      .merge(Teacher.where(admin: false))
+      .with_deliverability_issues
+      .order(Arel.sql("suppressed_at DESC NULLS LAST, last_delivery_event_at DESC NULLS LAST, emails_sent DESC"))
+
+    @affected_teachers_count = @problem_email_addresses.map(&:teacher_id).uniq.count
   end
 
   def new

@@ -24,6 +24,29 @@ RSpec.describe TeachersController, type: :controller do
     end
   end
 
+  describe "GET #deliverability_issues" do
+    render_views
+
+    it "shows non-admin teachers with suppressed or undelivered email addresses" do
+      ApplicationController.any_instance.stub(:require_admin).and_return(true)
+      email_addresses(:barney_personal_email1).update_columns(
+        emails_sent: 4,
+        emails_delivered: 1,
+        suppressed_at: Time.current,
+        suppression_reason: "hard_bounce",
+        last_delivery_event_type: "bounce"
+      )
+
+      get :deliverability_issues
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Teacher Deliverability Issues")
+      expect(response.body).to include("bigpurpletrex@gmail.com")
+      expect(response.body).to include("Suppressed")
+      expect(response.body).not_to include("validated@teacher.edu")
+    end
+  end
+
   it "should initialize session count to 1 when teachers signs up (submits app)" do
     ApplicationController.any_instance.stub(:is_admin?).and_return(false)
     short_app = Teacher.find_by(first_name: "Short")

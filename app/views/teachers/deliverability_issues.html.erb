@@ -1,0 +1,43 @@
+<%= provide(:title, "Teacher Deliverability Issues") %>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <h1 class="h3 mb-1">Teacher Deliverability Issues</h1>
+    <p class="text-muted mb-0"><%= @problem_email_addresses.count %> email address(es) across <%= @affected_teachers_count %> teacher(s) need review.</p>
+  </div>
+  <%= link_to "Back to Teachers", teachers_path, class: "btn btn-secondary" %>
+</div>
+
+<% if @problem_email_addresses.empty? %>
+  <div class="alert alert-success">No teacher email deliverability issues were found.</div>
+<% else %>
+  <table class="table table-striped js-dataTable js-teachersTable">
+    <thead class="thead-dark">
+      <tr>
+        <th>Teacher</th>
+        <th>Email</th>
+        <th>Issues</th>
+        <th>Sent</th>
+        <th>Delivered</th>
+        <th>Last Event</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @problem_email_addresses.each do |email| %>
+        <tr>
+          <td><%= email.teacher.full_name %></td>
+          <td>
+            <%= email.email %>
+            <%= email_address_label(email) %>
+          </td>
+          <td><%= deliverability_issue_summary(email).join(", ") %></td>
+          <td><%= email.emails_sent %></td>
+          <td><%= email.emails_delivered %></td>
+          <td><%= email.last_delivery_event_type&.humanize || "-" %> <%= email.last_delivery_event_at&.strftime("%m/%d/%Y %H:%M") %></td>
+          <td><%= link_to "View Teacher", teacher_path(email.teacher), class: "btn btn-sm btn-outline-primary" %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% end %>

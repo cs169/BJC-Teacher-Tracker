@@ -6,6 +6,10 @@
   <a href="/teachers.csv" class="btn btn-primary">Export All</a>
 </div>
 
+<div class="custom-control custom-checkbox custom-control-inline">
+  <%= link_to "Deliverability Issues", deliverability_issues_teachers_path, class: "btn btn-outline-danger" %>
+</div>
+
 <% Teacher.application_statuses.each do |key, value| %>
 <div class="custom-control custom-checkbox custom-control-inline">
   <input class="custom-control-input" type="checkbox" name="statusFilter" id="<%= key %>" value="<%= value %>" <%= key == 'validated' ? 'checked=true' : '' %>>
