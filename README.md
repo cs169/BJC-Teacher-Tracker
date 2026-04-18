@@ -79,6 +79,7 @@ C4Context
 * We are not using `application.yml` (rails env framework). Instead, we use a `.env` file at directory root to load all env vars. Use `.env.example` as a reference for env format.
 * Use tools like [overmind](https://github.com/DarthSim/overmind) or [foreman](https://github.com/ddollar/foreman) to load in the env vars.
 * You probably need to configure your own oauth keys and database name/passwords.
+* AWS email event ingestion uses `AWS_SNS_TOPIC_ARNS` and optionally `AWS_SES_CONFIGURATION_SET` in addition to the SMTP and S3 settings.
 
 ### Postgres Installation
 
@@ -183,6 +184,32 @@ heroku config:set MAILBLUSTER_API_KEY=your_api_key_here
 - **Manual sync**: Admins can sync individual teachers or all validated teachers from the UI
 - **Lead cleanup**: Deleting a teacher removes their lead from MailBluster
 - **Delivery tracking**: Email addresses track `emails_sent`, `emails_delivered`, and `bounced` status
+
+## AWS Deliverability Tracking
+
+Transactional mail is still sent through ActionMailer/SMTP, but AWS SES/SNS is now the canonical source of truth for delivery outcomes.
+
+### Configuration
+
+Set the following environment variables for production-style delivery tracking:
+
+```bash
+AWS_SNS_TOPIC_ARNS=arn:aws:sns:us-west-2:123456789012:teacher-mail-events
+AWS_SES_CONFIGURATION_SET=teacher-mail-events
+```
+
+### Flow
+
+- Teacher mail is tagged with SES message tags identifying this app, the teacher, and the mailer action.
+- AWS SNS posts verified SES event notifications to `POST /webhooks/aws/sns`.
+- The app verifies the SNS signature, checks the topic allowlist, and persists normalized email delivery events.
+- `email_addresses` summary fields are recalculated from those events and permanent bounces / complaints suppress future sends.
+- When a primary teacher email is suppressed, MailBluster is updated asynchronously so it stays a secondary sync layer rather than the source of truth.
+
+### Admin UI
+
+- Admins can review affected addresses from the `Deliverability Issues` link on the teachers index.
+- The report shows suppressed and undelivered teacher email addresses, summary counts, and links back to the impacted teacher records.
 
 ### Rake Tasks
 
