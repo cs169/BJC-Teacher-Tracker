@@ -189,6 +189,10 @@ heroku config:set MAILBLUSTER_API_KEY=your_api_key_here
 
 Transactional mail is still sent through ActionMailer/SMTP, but AWS SES/SNS is now the canonical source of truth for delivery outcomes.
 
+### Important For Developers
+
+This feature adds the `aws-sdk-sns` gem to the Gemfile. After pulling or merging these changes, run `bundle install` before starting the app or test suite.
+
 ### Configuration
 
 Set the following environment variables for production-style delivery tracking:
