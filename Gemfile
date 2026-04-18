@@ -40,6 +40,7 @@ gem "liquid"
 
 # Store uploaded files
 gem "aws-sdk-s3", require: false
+gem "aws-sdk-sns", require: false
 
 # Render images for file uploads in pages
 gem "image_processing", ">= 1.2"

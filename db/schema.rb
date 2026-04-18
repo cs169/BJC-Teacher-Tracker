@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_04_10_002004) do
+ActiveRecord::Schema.define(version: 2026_04_18_130100) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_stat_statements"
@@ -64,9 +64,42 @@ ActiveRecord::Schema.define(version: 2026_04_10_002004) do
     t.integer "emails_sent", default: 0, null: false
     t.integer "emails_delivered", default: 0, null: false
     t.boolean "bounced", default: false, null: false
+    t.datetime "suppressed_at"
+    t.string "suppression_reason"
+    t.string "suppression_source"
+    t.string "last_delivery_event_type"
+    t.datetime "last_delivery_event_at"
     t.index ["email"], name: "index_email_addresses_on_email", unique: true
+    t.index ["last_delivery_event_at"], name: "index_email_addresses_on_last_delivery_event_at"
+    t.index ["suppressed_at"], name: "index_email_addresses_on_suppressed_at"
     t.index ["teacher_id", "primary"], name: "index_email_addresses_on_teacher_id_and_primary", unique: true, where: "(\"primary\" = true)"
     t.index ["teacher_id"], name: "index_email_addresses_on_teacher_id"
+  end
+
+  create_table "email_delivery_events", force: :cascade do |t|
+    t.bigint "email_address_id"
+    t.integer "teacher_id"
+    t.string "provider", default: "aws_ses", null: false
+    t.string "sns_message_id", null: false
+    t.string "ses_message_id"
+    t.string "event_type", null: false
+    t.string "recipient_email", null: false
+    t.string "mailer_action"
+    t.string "bounce_type"
+    t.string "bounce_sub_type"
+    t.string "complaint_feedback_type"
+    t.datetime "event_occurred_at", null: false
+    t.jsonb "message_tags", default: {}, null: false
+    t.jsonb "payload", default: {}, null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["email_address_id", "event_occurred_at"], name: "idx_email_delivery_events_by_email"
+    t.index ["email_address_id"], name: "index_email_delivery_events_on_email_address_id"
+    t.index ["event_type", "event_occurred_at"], name: "idx_email_delivery_events_by_type"
+    t.index ["provider", "sns_message_id", "recipient_email"], name: "idx_email_delivery_events_dedupe", unique: true
+    t.index ["recipient_email"], name: "index_email_delivery_events_on_recipient_email"
+    t.index ["ses_message_id"], name: "index_email_delivery_events_on_ses_message_id"
+    t.index ["teacher_id", "event_occurred_at"], name: "idx_email_delivery_events_by_teacher"
   end
 
   create_table "email_templates", force: :cascade do |t|
@@ -172,6 +205,8 @@ ActiveRecord::Schema.define(version: 2026_04_10_002004) do
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "email_addresses", "teachers"
+  add_foreign_key "email_delivery_events", "email_addresses"
+  add_foreign_key "email_delivery_events", "teachers"
   add_foreign_key "pages", "teachers", column: "creator_id"
   add_foreign_key "pages", "teachers", column: "last_editor_id"
   add_foreign_key "pd_registrations", "professional_developments"

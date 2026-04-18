@@ -66,6 +66,7 @@ class Teacher < ApplicationRecord
   WORLD_LANGUAGES = [ "Afrikaans", "Albanian", "Arabic", "Armenian", "Basque", "Bengali", "Bulgarian", "Catalan", "Cambodian", "Chinese (Mandarin)", "Croatian", "Czech", "Danish", "Dutch", "English", "Estonian", "Fiji", "Finnish", "French", "Georgian", "German", "Greek", "Gujarati", "Hebrew", "Hindi", "Hungarian", "Icelandic", "Indonesian", "Irish", "Italian", "Japanese", "Javanese", "Korean", "Latin", "Latvian", "Lithuanian", "Macedonian", "Malay", "Malayalam", "Maltese", "Maori", "Marathi", "Mongolian", "Nepali", "Norwegian", "Persian", "Polish", "Portuguese", "Punjabi", "Quechua", "Romanian", "Russian", "Samoan", "Serbian", "Slovak", "Slovenian", "Spanish", "Swahili", "Swedish ", "Tamil", "Tatar", "Telugu", "Thai", "Tibetan", "Tonga", "Turkish", "Ukrainian", "Urdu", "Uzbek", "Vietnamese", "Welsh", "Xhosa" ].freeze
 
   has_many :email_addresses, dependent: :destroy
+  has_many :email_delivery_events, through: :email_addresses
   has_many_attached :files
   has_many_attached :more_files
   accepts_nested_attributes_for :email_addresses, allow_destroy: true
@@ -97,6 +98,7 @@ class Teacher < ApplicationRecord
   scope :unreviewed, -> { where("application_status=? AND admin=?", application_statuses[:not_reviewed], "false") }
   # Non-admin teachers who have been accepted/validated
   scope :validated, -> { where("application_status=? AND admin=?", application_statuses[:validated], "false") }
+  scope :with_deliverability_issues, -> { joins(:email_addresses).merge(EmailAddress.with_deliverability_issues).distinct }
 
 
   # TODO: Remove this.
@@ -179,6 +181,14 @@ class Teacher < ApplicationRecord
 
   def primary_email
     email_addresses.find_by(primary: true)&.email
+  end
+
+  def marketing_subscribed?
+    validated? && primary_email_address&.deliverable?
+  end
+
+  def has_deliverability_issues?
+    email_addresses.with_deliverability_issues.exists?
   end
 
   def personal_emails
