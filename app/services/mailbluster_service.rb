@@ -123,7 +123,7 @@ class MailblusterService
         email: teacher.primary_email,
         firstName: teacher.first_name,
         lastName: teacher.last_name,
-        subscribed: teacher.validated?,
+        subscribed: teacher.marketing_subscribed?,
         tags: lead_tags(teacher),
       }
 

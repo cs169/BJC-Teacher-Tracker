@@ -4,8 +4,13 @@ require "rails_helper"
 
 RSpec.describe AwsSesEventProcessor, type: :service do
   fixtures :all
+  include ActiveJob::TestHelper
 
   let(:email_address) { email_addresses(:validated_teacher_email) }
+
+  before do
+    clear_enqueued_jobs
+  end
 
   def build_event(event_type:, sns_message_id:, mail_overrides: {}, event_payload: {})
     {
@@ -59,7 +64,9 @@ RSpec.describe AwsSesEventProcessor, type: :service do
       }
     )
 
-    described_class.new(sns_message_id: "bounce-1", topic_arn: "arn:aws:sns:test", ses_event: payload).call
+    expect {
+      described_class.new(sns_message_id: "bounce-1", topic_arn: "arn:aws:sns:test", ses_event: payload).call
+    }.to have_enqueued_job(SyncTeacherToMailblusterJob).with(email_address.teacher_id)
 
     email_address.reload
     expect(email_address).to be_suppressed

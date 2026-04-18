@@ -61,6 +61,7 @@ class AwsSesEventProcessor
     event.save!
 
     email_address&.recalculate_deliverability!
+    enqueue_mailbluster_sync(email_address, teacher, event)
     true
   end
 
@@ -138,5 +139,13 @@ class AwsSesEventProcessor
 
   def tag_value(key)
     Array(mail_payload.dig("tags", key)).first
+  end
+
+  def enqueue_mailbluster_sync(email_address, teacher, event)
+    return unless teacher
+    return unless email_address&.primary?
+    return unless event.suppresses_address?
+
+    SyncTeacherToMailblusterJob.perform_later(teacher.id)
   end
 end
