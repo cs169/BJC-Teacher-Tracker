@@ -1,3 +1,37 @@
+function countHiddenResults(table, statusColIdx, searchQuery, statusValue) {
+  if (!searchQuery) return 0;
+  const terms = searchQuery.toLowerCase().trim().split(/\s+/).filter(Boolean);
+  let count = 0;
+  table.rows().every(function() {
+    const cache = this.cache('search');
+    if (cache[statusColIdx] !== statusValue) return;
+    const rowText = cache.join(' ').toLowerCase();
+    if (terms.every(term => rowText.includes(term))) count++;
+  });
+  return count;
+}
+
+function updateHiddenResultsNotice(table, statusColIdx) {
+  const searchQuery = table.search().trim();
+  const $notice = $('#hidden-filter-notice');
+  const $allBoxes = $('input:checkbox[name="statusFilter"]');
+  const checkedCount = $allBoxes.filter(':checked').length;
+
+  if (!searchQuery || checkedCount === 0 || checkedCount === $allBoxes.length) {
+    $notice.text('');
+    return;
+  }
+
+  const parts = [];
+  $allBoxes.not(':checked').each(function() {
+    const label = $('label[for="' + this.id + '"]').text().trim();
+    const count = countHiddenResults(table, statusColIdx, searchQuery, this.value);
+    if (count > 0) parts.push(count + ' result(s) in ' + label);
+  });
+
+  $notice.text(parts.length > 0 ? parts.join(', ') + ' — hidden by current filter' : '');
+}
+
 $(function() {
   // Filtering for the Admin Teachers Index
   $.fn.dataTable.ext.search.push((_, searchData) => {
@@ -22,11 +56,19 @@ $(function() {
   });
 
   $tables.draw();
+
+  const statusColIdx = $('td[data-col="status"]').first().index();
+  const $noticeEl = $('<div id="hidden-filter-notice" class="small text-muted w-100"></div>');
+  $($tables.table().container()).find('.dataTables_info').closest('.col-6').append($noticeEl);
+
+  const $teachersTable = $('.js-teachersTable').DataTable();
+
   $(".custom-checkbox").on("change", () => {
       $tables.draw();
   });
   $tables.on('draw', function() {
       $('[data-toggle="tooltip"]').tooltip('dispose');
       $('[data-toggle="tooltip"]').tooltip();
+      updateHiddenResultsNotice($teachersTable, statusColIdx);
   });
 });
