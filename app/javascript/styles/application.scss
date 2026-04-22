@@ -14,13 +14,13 @@
  *= require selectize.default
  */
 
-@import 'bootstrap';
+@import 'bootstrap/scss/bootstrap';
 
 // $fa-font-path: '/packs/media/webfonts';
-$fa-font-path: '~@fortawesome/fontawesome-free/webfonts';
-@import '~@fortawesome/fontawesome-free/scss/fontawesome';
-@import '~@fortawesome/fontawesome-free/scss/solid';
-@import '~@fortawesome/fontawesome-free/scss/regular';
+$fa-font-path: './fonts';
+@import '@fortawesome/fontawesome-free/scss/fontawesome';
+@import '@fortawesome/fontawesome-free/scss/solid';
+@import '@fortawesome/fontawesome-free/scss/regular';
 @import 'layout';
 @import 'forms';
 @import 'edit_teachers';
@@ -37,6 +37,7 @@ html {
 body {
   margin: 70px 0 255px;
   /* bottom = footer height */
+  background: red !important;
 }
 
 .btn-xs {
@@ -75,7 +76,7 @@ body {
 }
 
 footer {
-  position: absolute;
+  position: static;
   margin: 0;
   background-color: #18568C;
   color: #FFF;
@@ -163,7 +164,7 @@ footer a:active {
 }
 
 .trapezoid {
-  position: absolute;
+  position: static;
   bottom: -11px;
   left: 36px;
   border-top-style: solid;

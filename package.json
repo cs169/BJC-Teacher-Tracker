@@ -6,7 +6,6 @@
     "@fortawesome/fontawesome-free": "^5.x",
     "@rails/actiontext": "^6.1.4-4",
     "@rails/ujs": "^7.0.1",
-    "@rails/webpacker": "5.x.x",
     "bootstrap": "^4.x.x",
     "choices.js": "^10.1.0",
     "datatables.net-bs4": "^1.x.x",
@@ -20,14 +19,22 @@
     "turbolinks": "^5.2.0"
   },
   "devDependencies": {
-    "webpack": "^4.x",
-    "webpack-cli": "^3.3.12",
-    "webpack-dev-server": "^4.x"
+    "@rollup/plugin-commonjs": "^29.0.2",
+    "@rollup/plugin-node-resolve": "^16.0.3",
+    "postcss": "^8.5.9",
+    "postcss-flexbugs-fixes": "^5.0.2",
+    "postcss-import": "^16.1.1",
+    "postcss-preset-env": "^11.2.0",
+    "rollup": "^4.60.1",
+    "rollup-plugin-copy": "^3.5.0",
+    "rollup-plugin-postcss": "^4.0.2",
+    "sass": "^1.99.0"
   },
   "engines": {
-    "node": "^14.0 || ^16.0"
+    "node": ">=16"
   },
   "scripts": {
-    "dev": "overmind s -f Procfile.dev"
+    "dev": "overmind s -f Procfile.dev",
+    "build": "rollup -c --bundleConfigAsCjs rollup.config.js"
   }
 }

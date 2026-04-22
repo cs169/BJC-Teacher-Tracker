@@ -1,4 +1,7 @@
-$(function() {
+import $ from "jquery"
+
+export function initDataTables() {
+  $(function() {
   // Filtering for the Admin Teachers Index
   $.fn.dataTable.ext.search.push((_, searchData) => {
     let enabled = $('input:checkbox[name="statusFilter"]:checked').map((_i, el) => el.value).get();
@@ -69,4 +72,9 @@ $(function() {
 
   $tables.on('search.dt', scheduleCrossFilterUpdate);
   $('.custom-checkbox').on('change', scheduleCrossFilterUpdate);
-});
+  });
+}
+
+initDataTables();
+
+export default initDataTables;

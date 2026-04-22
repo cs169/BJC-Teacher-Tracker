@@ -6,11 +6,9 @@
   <%- else %>
     <title>BJC Teachers</title>
   <%- end %>
-  <%= javascript_pack_tag 'application' %>
-  <%= stylesheet_pack_tag 'application' %>
-  <%= javascript_pack_tag 'bjc' %>
-  <%= stylesheet_pack_tag 'bjc' %>
-
+  <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+  <%= javascript_include_tag "application", "data-turbo-track": "reload", type: "module" %>
+  <%= javascript_include_tag "bjc", "data-turbo-track": "reload", type: "module" %>
   <%= csrf_meta_tags %>
 </head>
 

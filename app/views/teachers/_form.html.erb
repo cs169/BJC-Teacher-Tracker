@@ -1,4 +1,4 @@
-<%= form_with model: @teacher, id: 'new_teacher' do |f| %>
+<%= form_with model: @teacher, id: 'new_teacher', local: true do |f| %>
 
 <%# Render the extra input group to change teacher's application
 status ONLY IF the person viewing this page is an admin. %>

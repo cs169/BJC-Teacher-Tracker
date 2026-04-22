@@ -147,12 +147,9 @@ fabric.properties
 /config/database.yml
 /config/application.yml
 
-/public/packs
-/public/packs-test
 /node_modules
 /yarn-error.log
 yarn-debug.log*
-.yarn-integrity
 
 # Heroku DB exports
 *.dump*
@@ -162,3 +159,6 @@ cc-test-reporter
 
 # CSV data files
 *.csv
+
+/app/assets/builds/*
+!/app/assets/builds/.keep

@@ -13,8 +13,7 @@ gem "puma", "~> 5"
 gem "pg", "~> 1.5"
 gem "pg_search"
 
-# Front-end Assets
-gem "webpacker"
+gem "jsbundling-rails"
 
 # Reduces boot times through caching; required in config/boot.rb
 gem "bootsnap", ">= 1.4.4", require: false

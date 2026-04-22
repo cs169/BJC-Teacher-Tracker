@@ -4,9 +4,7 @@
     options_for_select( @ordered_schools.map(&:selectize_options)),
     {prompt: "Enter the name or city of your school"},
     {class: "select", id: "school_selectize" } %>
-  <%= javascript_pack_tag 'schools' %>
-  <%= stylesheet_pack_tag 'schools', media: 'all', 'data-turbolinks-track': 'true' %>
-  <%= csrf_meta_tags %>
+  <%= javascript_include_tag 'schools', "data-turbo-track": "reload", type: "module" %>
 </div>
 
 <div id="school_form" style="display: none">
