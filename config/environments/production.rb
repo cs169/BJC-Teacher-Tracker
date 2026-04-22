@@ -103,5 +103,5 @@ Rails.application.configure do
   }
 
   # Store files on Amazon S3. (Uncomment this when S3 is setup)
-  config.active_storage.service = :amazon
+  config.active_storage.service = :local
 end
