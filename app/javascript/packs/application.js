@@ -51,6 +51,7 @@ import "datatables.net-buttons-bs4";
 import 'datatables.net-buttons/js/buttons.html5.js';
 
 import './datatables.js';
+import './schools_index.js';
 import '../styles/application.scss';
 import './schools.js';
 
