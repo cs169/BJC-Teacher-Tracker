@@ -150,18 +150,72 @@ module SeedData
   end
 
   def self.create_schools
-    school = School.find_or_initialize_by(
-      name: "UC Berkeley",
-      city: "Berkeley",
-      state: "CA",
-      country: "US"
-    )
+    schools = [
+      {
+        name: "UC Berkeley",
+        city: "Berkeley",
+        state: "CA",
+        country: "US",
+        website: "https://bjc.berkeley.edu",
+        grade_level: 4,
+        school_type: 0
+      },
+      {
+        name: "Lincoln High School",
+        city: "San Francisco",
+        state: "CA",
+        country: "US",
+        website: "https://lincolnhs.org",
+        grade_level: 2,
+        school_type: 0
+      },
+      {
+        name: "Riverside Middle School",
+        city: "Austin",
+        state: "TX",
+        country: "US",
+        website: "https://riverside-ms.edu",
+        grade_level: 1,
+        school_type: 0
+      },
+      {
+        name: "Greenfield Charter Academy",
+        city: "Portland",
+        state: "OR",
+        country: "US",
+        website: "https://greenfieldcharter.org",
+        grade_level: 2,
+        school_type: 2
+      },
+      {
+        name: "Eastside Prep",
+        city: "New York",
+        state: "NY",
+        country: "US",
+        website: "https://eastsideprep.edu",
+        grade_level: 2,
+        school_type: 1
+      },
+      {
+        name: "Pacific Community College",
+        city: "Seattle",
+        state: "WA",
+        country: "US",
+        website: "https://pacificcc.edu",
+        grade_level: 3,
+        school_type: 0
+      }
+    ]
 
-    school.update!(
-      website: "https://bjc.berkeley.edu",
-      grade_level: 4,
-      school_type: 0
-    )
+    schools.each do |attrs|
+      school = School.find_or_initialize_by(
+        name: attrs[:name],
+        city: attrs[:city],
+        state: attrs[:state],
+        country: attrs[:country]
+      )
+      school.update!(attrs)
+    end
   end
 
   def self.teachers
@@ -191,7 +245,173 @@ module SeedData
             school: School.find_by(name: "UC Berkeley"),
 
             email: "lmock@berkeley.edu",
-        }
+        },
+        {
+            first_name: "Priya",
+            last_name: "Ramirez",
+            admin: false,
+            status: 0,
+            snap: "priya_ram",
+            application_status: "Validated",
+            personal_website: "https://priyaramirez.dev",
+            personal_email: "priya.ramirez@gmail.com",
+            education_level: 1,
+            languages: ["English", "Spanish"],
+            school: School.find_by(name: "Lincoln High School"),
+            email: "pramirez@lincolnhs.org",
+        },
+        {
+            first_name: "James",
+            last_name: "Okonkwo",
+            admin: false,
+            status: 1,
+            snap: "jokonkwo_cs",
+            application_status: "Validated",
+            personal_website: "https://okonkwo-teaches.com",
+            personal_email: "james.okonkwo@outlook.com",
+            education_level: 0,
+            languages: ["English"],
+            school: School.find_by(name: "Riverside Middle School"),
+            email: "jokonkwo@riverside-ms.edu",
+        },
+        {
+            first_name: "Sofia",
+            last_name: "Chen",
+            admin: false,
+            status: 0,
+            snap: "sofia_chen_cs",
+            application_status: "Not Reviewed",
+            personal_website: "https://sofiacsclass.com",
+            education_level: 1,
+            languages: ["English", "Mandarin"],
+            school: School.find_by(name: "Greenfield Charter Academy"),
+            email: "schen@greenfieldcharter.org",
+        },
+        {
+            first_name: "Marcus",
+            last_name: "Williams",
+            admin: false,
+            status: 2,
+            snap: "mwilliams_bjc",
+            application_status: "Validated",
+            personal_website: "https://mwilliamscs.com",
+            education_level: 1,
+            languages: ["English"],
+            school: School.find_by(name: "Eastside Prep"),
+            email: "mwilliams@eastsideprep.edu",
+        },
+        {
+            first_name: "Aisha",
+            last_name: "Patel",
+            admin: false,
+            status: 0,
+            snap: "aisha_p",
+            application_status: "Info Needed",
+            personal_website: "https://aishapatel.dev",
+            personal_email: "aisha.patel@yahoo.com",
+            education_level: 2,
+            more_info: "Currently setting up a new CS program at the college.",
+            languages: ["English", "Hindi"],
+            school: School.find_by(name: "Pacific Community College"),
+            email: "apatel@pacificcc.edu",
+        },
+        {
+            first_name: "Diego",
+            last_name: "Morales",
+            admin: false,
+            status: 5,
+            snap: "diego_teals",
+            application_status: "Validated",
+            personal_website: "https://dmorales-teals.com",
+            personal_email: "diego.morales@proton.me",
+            education_level: 1,
+            languages: ["English", "Spanish"],
+            school: School.find_by(name: "Lincoln High School"),
+            email: "dmorales@lincolnhs.org",
+        },
+        {
+            first_name: "Emily",
+            last_name: "Nakamura",
+            admin: false,
+            status: 8,
+            snap: "emily_nak",
+            application_status: "Denied",
+            personal_website: "https://nakamura-cs.net",
+            education_level: 0,
+            verification_notes: "Could not verify school affiliation.",
+            languages: ["English", "Japanese"],
+            school: School.find_by(name: "Riverside Middle School"),
+            email: "enakamura@riverside-ms.edu",
+        },
+        {
+            first_name: "Tariq",
+            last_name: "Hassan",
+            admin: false,
+            status: 0,
+            snap: "tariq_h",
+            application_status: "Validated",
+            personal_website: "https://tariqhassan.io",
+            personal_email: "tariq.hassan@gmail.com",
+            education_level: 1,
+            languages: ["English", "Arabic"],
+            school: School.find_by(name: "Eastside Prep"),
+            email: "thassan@eastsideprep.edu",
+        },
+        {
+            first_name: "Rachel",
+            last_name: "Novak",
+            admin: false,
+            status: 0,
+            snap: "rnovak_cs",
+            application_status: "Validated",
+            personal_website: "https://rachelnovak.dev",
+            personal_email: "rachel.novak@gmail.com",
+            education_level: 1,
+            languages: ["English", "Czech"],
+            school: School.find_by(name: "Lincoln High School"),
+            email: "rnovak@lincolnhs.org",
+        },
+        {
+            first_name: "Kevin",
+            last_name: "Tran",
+            admin: false,
+            status: 1,
+            snap: "kevtran_bjc",
+            application_status: "Not Reviewed",
+            personal_website: "https://kevintran.me",
+            education_level: 2,
+            languages: ["English", "Vietnamese"],
+            school: School.find_by(name: "Pacific Community College"),
+            email: "ktran@pacificcc.edu",
+        },
+        {
+            first_name: "Fatima",
+            last_name: "Al-Rashid",
+            admin: false,
+            status: 7,
+            snap: "fatima_excite",
+            application_status: "Validated",
+            personal_website: "https://fatimaalrashid.org",
+            personal_email: "fatima.alrashid@icloud.com",
+            education_level: 1,
+            languages: ["English", "Arabic", "French"],
+            school: School.find_by(name: "Greenfield Charter Academy"),
+            email: "falrashid@greenfieldcharter.org",
+        },
+        {
+            first_name: "Mia",
+            last_name: "Johansson",
+            admin: false,
+            status: 0,
+            snap: "mia_johan",
+            application_status: "Validated",
+            personal_website: "https://miajohansson.se",
+            personal_email: "mia.johansson@hotmail.com",
+            education_level: 1,
+            languages: ["English", "Swedish"],
+            school: School.find_by(name: "Eastside Prep"),
+            email: "mjohansson@eastsideprep.edu",
+        },
     ]
   end
 
@@ -221,6 +441,111 @@ module SeedData
         email: "lmock2@berkeley.edu",
         primary: false,
         teacher: Teacher.find_by(first_name: "Lauren"),
+      },
+      {
+        email: "pramirez@lincolnhs.org",
+        primary: true,
+        teacher: Teacher.find_by(first_name: "Priya"),
+      },
+      {
+        email: "priya.ramirez@gmail.com",
+        primary: false,
+        teacher: Teacher.find_by(first_name: "Priya"),
+      },
+      {
+        email: "jokonkwo@riverside-ms.edu",
+        primary: true,
+        teacher: Teacher.find_by(first_name: "James"),
+      },
+      {
+        email: "james.okonkwo@outlook.com",
+        primary: false,
+        teacher: Teacher.find_by(first_name: "James"),
+      },
+      {
+        email: "schen@greenfieldcharter.org",
+        primary: true,
+        teacher: Teacher.find_by(first_name: "Sofia"),
+      },
+      {
+        email: "mwilliams@eastsideprep.edu",
+        primary: true,
+        teacher: Teacher.find_by(first_name: "Marcus"),
+      },
+      {
+        email: "apatel@pacificcc.edu",
+        primary: true,
+        teacher: Teacher.find_by(first_name: "Aisha"),
+      },
+      {
+        email: "aisha.patel@yahoo.com",
+        primary: false,
+        teacher: Teacher.find_by(first_name: "Aisha"),
+      },
+      {
+        email: "dmorales@lincolnhs.org",
+        primary: true,
+        teacher: Teacher.find_by(first_name: "Diego"),
+      },
+      {
+        email: "diego.morales@proton.me",
+        primary: false,
+        teacher: Teacher.find_by(first_name: "Diego"),
+      },
+      {
+        email: "enakamura@riverside-ms.edu",
+        primary: true,
+        teacher: Teacher.find_by(first_name: "Emily"),
+      },
+      {
+        email: "thassan@eastsideprep.edu",
+        primary: true,
+        teacher: Teacher.find_by(first_name: "Tariq"),
+      },
+      {
+        email: "tariq.hassan@gmail.com",
+        primary: false,
+        teacher: Teacher.find_by(first_name: "Tariq"),
+      },
+      {
+        email: "rnovak@lincolnhs.org",
+        primary: true,
+        teacher: Teacher.find_by(first_name: "Rachel"),
+      },
+      {
+        email: "rachel.novak@gmail.com",
+        primary: false,
+        teacher: Teacher.find_by(first_name: "Rachel"),
+      },
+      {
+        email: "ktran@pacificcc.edu",
+        primary: true,
+        teacher: Teacher.find_by(first_name: "Kevin"),
+      },
+      {
+        email: "falrashid@greenfieldcharter.org",
+        primary: true,
+        teacher: Teacher.find_by(first_name: "Fatima"),
+      },
+      {
+        email: "fatima.alrashid@icloud.com",
+        primary: false,
+        teacher: Teacher.find_by(first_name: "Fatima"),
+      },
+      {
+        email: "oburke@riverside-ms.edu",
+        primary: true,
+        teacher: Teacher.find_by(first_name: "Owen"),
+      },
+      {
+        email: "mjohansson@eastsideprep.edu",
+        primary: true,
+        teacher: Teacher.find_by(first_name: "Mia"),
+      },
+      {
+        email: "mia.johansson@hotmail.com",
+        primary: false,
+        teacher: Teacher.find_by(first_name: "Mia"),
       },
     ]
   end

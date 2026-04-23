@@ -10,6 +10,20 @@ RSpec.describe TeachersController, type: :controller do
     ApplicationController.any_instance.stub(:require_login).and_return(true)
   end
 
+  describe "GET #index" do
+    render_views
+
+    it "hides the MailBluster sync column from the teachers index" do
+      ApplicationController.any_instance.stub(:require_admin).and_return(true)
+
+      get :index
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).not_to include("MB Sync")
+      expect(response.body).not_to include("Not Synced")
+    end
+  end
+
   it "should initialize session count to 1 when teachers signs up (submits app)" do
     ApplicationController.any_instance.stub(:is_admin?).and_return(false)
     short_app = Teacher.find_by(first_name: "Short")
@@ -89,6 +103,16 @@ RSpec.describe TeachersController, type: :controller do
     long_app = Teacher.find_by(first_name: "Short")
     delete :destroy, params: { id: long_app.id }
     expect(Teacher.find_by(first_name: "Short")).to be_nil
+  end
+
+  it "deletes MailBluster lead when destroying a teacher" do
+    ApplicationController.any_instance.stub(:require_admin).and_return(true)
+    ApplicationController.any_instance.stub(:is_admin?).and_return(true)
+    teacher = Teacher.find_by(first_name: "Short")
+    allow(MailblusterService).to receive(:configured?).and_return(true)
+    expect(MailblusterService).to receive(:delete_lead).with(teacher.primary_email)
+
+    delete :destroy, params: { id: teacher.id }
   end
 
   it "doesn't allow teacher to delete an application" do
@@ -340,6 +364,131 @@ RSpec.describe TeachersController, type: :controller do
       expect(assigns(:status)).to eq("Teacher")
       expect(assigns(:readonly)).to be_truthy
       expect(response).to render_template("edit")
+    end
+  end
+
+  describe "MailBluster sync actions" do
+    before(:each) do
+      ApplicationController.any_instance.stub(:require_admin).and_return(true)
+      ApplicationController.any_instance.stub(:is_admin?).and_return(true)
+    end
+
+    describe "POST #sync_mailbluster" do
+      let(:teacher) { Teacher.find_by(first_name: "Validated") }
+
+      it "syncs a single teacher when API key is configured" do
+        allow(MailblusterService).to receive(:configured?).and_return(true)
+        allow(MailblusterService).to receive(:sync_teacher).with(teacher).and_return({ success: true })
+
+        post :sync_mailbluster, params: { id: teacher.id }
+        expect(response).to redirect_to(teacher_path(teacher))
+        expect(flash[:notice]).to include("Successfully synced")
+      end
+
+      it "shows error when sync fails" do
+        allow(MailblusterService).to receive(:configured?).and_return(true)
+        allow(MailblusterService).to receive(:sync_teacher).with(teacher).and_return({ success: false, error: "API error" })
+
+        post :sync_mailbluster, params: { id: teacher.id }
+        expect(response).to redirect_to(teacher_path(teacher))
+        expect(flash[:alert]).to include("Failed to sync")
+      end
+
+      it "shows error when API key is not configured" do
+        allow(MailblusterService).to receive(:configured?).and_return(false)
+
+        post :sync_mailbluster, params: { id: teacher.id }
+        expect(response).to redirect_to(teacher_path(teacher))
+        expect(flash[:alert]).to include("not configured")
+      end
+    end
+
+    describe "POST #sync_all_mailbluster" do
+      it "syncs all teachers and shows results" do
+        allow(MailblusterService).to receive(:configured?).and_return(true)
+        allow(MailblusterService).to receive(:sync_all_teachers).and_return(
+          { synced: 5, failed: 1, skipped: 0, errors: ["Teacher 99 (Test)"] }
+        )
+
+        post :sync_all_mailbluster
+        expect(response).to redirect_to(teachers_path)
+        expect(flash[:notice]).to include("5 synced")
+        expect(flash[:notice]).to include("1 failed")
+      end
+
+      it "shows errors from sync" do
+        allow(MailblusterService).to receive(:configured?).and_return(true)
+        allow(MailblusterService).to receive(:sync_all_teachers).and_return(
+          { synced: 0, failed: 2, skipped: 0, errors: ["Teacher 1: error", "Teacher 2: error"] }
+        )
+
+        post :sync_all_mailbluster
+        expect(flash[:alert]).to include("Errors:")
+      end
+
+      it "shows error when API key is not configured" do
+        allow(MailblusterService).to receive(:configured?).and_return(false)
+
+        post :sync_all_mailbluster
+        expect(response).to redirect_to(teachers_path)
+        expect(flash[:alert]).to include("not configured")
+      end
+    end
+  end
+
+  describe "POST #validate with MailBluster sync" do
+    before(:each) do
+      ApplicationController.any_instance.stub(:require_admin).and_return(true)
+      ApplicationController.any_instance.stub(:is_admin?).and_return(true)
+    end
+
+    it "syncs teacher to MailBluster when approving" do
+      teacher = Teacher.find_by(first_name: "Short")
+      allow(MailblusterService).to receive(:configured?).and_return(true)
+      expect(MailblusterService).to receive(:create_or_update_lead).with(teacher)
+
+      post :validate, params: { id: teacher.id }
+    end
+
+    it "does not sync when API key is not configured" do
+      teacher = Teacher.find_by(first_name: "Short")
+      allow(MailblusterService).to receive(:configured?).and_return(false)
+      expect(MailblusterService).not_to receive(:create_or_update_lead)
+
+      post :validate, params: { id: teacher.id }
+    end
+  end
+
+  describe "PUT #update with MailBluster auto-sync on status change" do
+    before(:each) do
+      ApplicationController.any_instance.stub(:require_admin).and_return(true)
+      ApplicationController.any_instance.stub(:require_edit_permission).and_return(true)
+      ApplicationController.any_instance.stub(:is_admin?).and_return(true)
+      ApplicationController.any_instance.stub(:current_user).and_return(Teacher.find_by(first_name: "Ye"))
+    end
+
+    it "syncs to MailBluster when application_status changes to validated" do
+      teacher = Teacher.find_by(first_name: "Short")
+      allow(MailblusterService).to receive(:configured?).and_return(true)
+      expect(MailblusterService).to receive(:create_or_update_lead)
+
+      put :update, params: {
+        id: teacher.id,
+        teacher: { application_status: "validated", school_id: teacher.school_id },
+        skip_email: "Yes"
+      }
+    end
+
+    it "does not sync when status does not change" do
+      teacher = Teacher.find_by(first_name: "Validated")
+      allow(MailblusterService).to receive(:configured?).and_return(true)
+      expect(MailblusterService).not_to receive(:create_or_update_lead)
+
+      put :update, params: {
+        id: teacher.id,
+        teacher: { first_name: "StillValidated", school_id: teacher.school_id },
+        skip_email: "Yes"
+      }
     end
   end
 end

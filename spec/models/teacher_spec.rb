@@ -4,31 +4,35 @@
 #
 # Table name: teachers
 #
-#  id                 :integer          not null, primary key
-#  admin              :boolean          default(FALSE)
-#  application_status :string           default("not_reviewed")
-#  education_level    :integer          default(NULL)
-#  email              :string
-#  first_name         :string
-#  ip_history         :inet             default([]), is an Array
-#  languages          :string           default(["\"English\""]), is an Array
-#  last_name          :string
-#  last_session_at    :datetime
-#  more_info          :string
-#  personal_email     :string
-#  personal_website   :string
-#  session_count      :integer          default(0)
-#  snap               :string
-#  status             :integer
-#  created_at         :datetime
-#  updated_at         :datetime
-#  school_id          :integer
+#  id                    :integer          not null, primary key
+#  admin                 :boolean          default(FALSE)
+#  application_status    :string           default("not_reviewed")
+#  education_level       :integer          default(NULL)
+#  email                 :string
+#  first_name            :string
+#  ip_history            :inet             default([]), is an Array
+#  languages             :string           default(["\"English\""]), is an Array
+#  last_name             :string
+#  last_session_at       :datetime
+#  mailbluster_synced_at :datetime
+#  more_info             :string
+#  personal_email        :string
+#  personal_website      :string
+#  session_count         :integer          default(0)
+#  snap                  :string
+#  status                :integer
+#  verification_notes    :text
+#  created_at            :datetime
+#  updated_at            :datetime
+#  mailbluster_id        :integer
+#  school_id             :integer
 #
 # Indexes
 #
 #  index_teachers_on_email                     (email) UNIQUE
 #  index_teachers_on_email_and_first_name      (email,first_name)
 #  index_teachers_on_email_and_personal_email  (email,personal_email) UNIQUE
+#  index_teachers_on_mailbluster_id            (mailbluster_id) UNIQUE
 #  index_teachers_on_school_id                 (school_id)
 #  index_teachers_on_snap                      (snap) UNIQUE WHERE ((snap)::text <> ''::text)
 #  index_teachers_on_status                    (status)
@@ -129,6 +133,82 @@ RSpec.describe Teacher, type: :model do
 
     it "shows an application status" do
       expect(teacher.display_application_status).to eq "Not Reviewed"
+    end
+  end
+
+  describe "MailBluster helper methods" do
+    let(:validated_teacher) { teachers(:validated_teacher) }
+
+    describe "#mailbluster_synced?" do
+      it "returns false when mailbluster_id is nil" do
+        expect(validated_teacher.mailbluster_synced?).to be false
+      end
+
+      it "returns true when mailbluster_id is present" do
+        validated_teacher.update_column(:mailbluster_id, 12345)
+        expect(validated_teacher.mailbluster_synced?).to be true
+      end
+    end
+
+    describe "#mailbluster_profile_url" do
+      it "returns nil when not synced" do
+        expect(validated_teacher.mailbluster_profile_url).to be_nil
+      end
+
+      it "returns the MailBluster profile URL when synced" do
+        validated_teacher.update_column(:mailbluster_id, 12345)
+        expect(validated_teacher.mailbluster_profile_url).to eq("https://app.mailbluster.com/leads/12345")
+      end
+    end
+
+    describe "#primary_email_sent" do
+      it "returns 0 by default" do
+        expect(validated_teacher.primary_email_sent).to eq(0)
+      end
+
+      it "returns the email sent count from primary email address" do
+        email = validated_teacher.email_addresses.find_by(primary: true)
+        email.update_column(:emails_sent, 10)
+        expect(validated_teacher.primary_email_sent).to eq(10)
+      end
+    end
+
+    describe "#primary_email_delivered" do
+      it "returns 0 by default" do
+        expect(validated_teacher.primary_email_delivered).to eq(0)
+      end
+
+      it "returns the email delivered count from primary email address" do
+        email = validated_teacher.email_addresses.find_by(primary: true)
+        email.update_column(:emails_delivered, 8)
+        expect(validated_teacher.primary_email_delivered).to eq(8)
+      end
+    end
+
+    describe "#primary_email_bounced" do
+      it "returns 'No' by default" do
+        expect(validated_teacher.primary_email_bounced).to eq("No")
+      end
+
+      it "returns 'Yes' when primary email is bounced" do
+        email = validated_teacher.email_addresses.find_by(primary: true)
+        email.update_column(:bounced, true)
+        expect(validated_teacher.primary_email_bounced).to eq("Yes")
+      end
+    end
+  end
+
+  describe ".csv_export" do
+    it "includes mailbluster_id column" do
+      csv = Teacher.csv_export
+      expect(csv).to include("mailbluster_id")
+    end
+
+    it "includes email delivery columns" do
+      csv = Teacher.csv_export
+      expect(csv).to include("primary_email_sent")
+      expect(csv).to include("primary_email_delivered")
+      expect(csv).to include("primary_email_bounced")
     end
   end
 end

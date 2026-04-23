@@ -159,6 +159,44 @@ If bundler install runs successfully, continue with the following commands to co
 - `heroku config:set ...` for each of the environment variables.
 - `heroku open`
 
+## MailBluster Integration
+
+The app integrates with [MailBluster](https://mailbluster.com/) for email marketing and newsletter management.
+
+### Configuration
+
+Set the `MAILBLUSTER_API_KEY` environment variable:
+
+```bash
+# Local development
+export MAILBLUSTER_API_KEY=your_api_key_here
+
+# Heroku
+heroku config:set MAILBLUSTER_API_KEY=your_api_key_here
+```
+
+### Features
+
+- **Auto-sync on approval**: When a teacher is validated, their info is synced to MailBluster as a lead
+- **Auto-sync on status change**: Updating a teacher's application status triggers a MailBluster sync
+- **Auto-sync on email add**: Adding a new email address to a validated teacher triggers sync
+- **Manual sync**: Admins can sync individual teachers or all validated teachers from the UI
+- **Lead cleanup**: Deleting a teacher removes their lead from MailBluster
+- **Delivery tracking**: Email addresses track `emails_sent`, `emails_delivered`, and `bounced` status
+
+### Rake Tasks
+
+```bash
+# Sync all validated teachers to MailBluster
+bundle exec rake mailbluster:sync_all
+
+# Sync a single teacher by ID
+bundle exec rake mailbluster:sync_teacher[123]
+
+# Check sync status
+bundle exec rake mailbluster:status
+```
+
 
 
 ### CodeClimate Local Test
