@@ -61,10 +61,22 @@ class TeacherMailer < ApplicationMailer
       piazza_password: Rails.application.secrets[:piazza_password],
       denial_reason: @denial_reason,
       request_reason: @request_reason,
-      request_info_reason: @request_reason
+      request_info_reason: @request_reason,
+      view_teacher_url: teacher_show_url
     }
     base_rules.merge!(@teacher.email_attributes)
     base_rules.with_indifferent_access
+  end
+
+  def teacher_show_url
+    Rails.application.routes.url_helpers.teacher_url(@teacher, **url_options_for_mailer)
+  end
+
+  def url_options_for_mailer
+    default_options = ActionMailer::Base.default_url_options || {}
+    return default_options if default_options[:host].present?
+
+    { host: "127.0.0.1", port: 3000, protocol: "http" }
   end
 
   def email_template
