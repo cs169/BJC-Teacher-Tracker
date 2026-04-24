@@ -5,7 +5,7 @@ require "rails_helper"
 describe TeacherMailer do
   fixtures :all
 
-  before(:all) do
+  before(:each) do
     ActionMailer::Base.default_url_options = { host: "127.0.0.1", port: 3000, protocol: "http" }
     Rails.application.load_seed
   end
