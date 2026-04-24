@@ -2,8 +2,8 @@
 
 class EmailAddressesController < ApplicationController
   before_action :require_login
-  before_action :require_admin
   before_action :set_teacher
+  before_action :require_email_edit_permission
 
   def create
     email = params[:email].to_s.strip
@@ -29,6 +29,11 @@ class EmailAddressesController < ApplicationController
       return
     end
 
+    if @teacher.email_addresses.count <= 1
+      redirect_to teacher_path(@teacher), alert: "Add another email before deleting this one."
+      return
+    end
+
     email.destroy!
     # Re-sync to MailBluster since email list changed
     MailblusterService.create_or_update_lead(@teacher) if MailblusterService.configured? && @teacher.validated?
@@ -42,5 +47,11 @@ class EmailAddressesController < ApplicationController
   private
   def set_teacher
     @teacher = Teacher.find(params[:teacher_id])
+  end
+
+  def require_email_edit_permission
+    return if is_admin? || current_user.id == @teacher.id
+
+    redirect_to edit_teacher_path(current_user.id), alert: "You can only edit your own information"
   end
 end
