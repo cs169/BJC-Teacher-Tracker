@@ -20,11 +20,13 @@
   <% end %>
 </td>
 <td
-    <%- if teacher.display_status.length > 25 %>
-    data-toggle="tooltip"
-    data-placement="right"
-    title="<%= teacher.display_status %>"
-    <% end %>
+  data-col="course"
+  data-course="<%= teacher.course_category %>"
+  <%- if teacher.display_status.length > 25 %>
+  data-toggle="tooltip"
+  data-placement="right"
+  title="<%= teacher.display_status %>"
+  <% end %>
   >
   <%= truncate(teacher.display_status, length: 25) %>
   <%# <button

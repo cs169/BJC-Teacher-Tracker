@@ -101,6 +101,19 @@ class Teacher < ApplicationRecord
     home_school_bjc: 9
   }
 
+  CSP_STATUSES = %i[csp_teacher mixed_class teals_volunteer teals_teacher excite].freeze
+  SPARKS_STATUSES = %i[middle_school_bjc].freeze
+
+  def course_category
+    if CSP_STATUSES.include?(status.to_sym)
+      "CSP"
+    elsif SPARKS_STATUSES.include?(status.to_sym)
+      "Sparks"
+    else
+      "Other"
+    end
+  end
+
   # Always add to the bottom of the list!
   # The text here may be changed, but the index maps to the actual reason (above)
   STATUSES = [

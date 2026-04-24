@@ -1,10 +1,15 @@
 function countHiddenResults(table, statusColIdx, searchQuery, statusValue) {
   if (!searchQuery) return 0;
   const terms = searchQuery.toLowerCase().trim().split(/\s+/).filter(Boolean);
+  const courseFilter = $('#courseFilter').val();
   let count = 0;
   table.rows().every(function() {
     const cache = this.cache('search');
     if (cache[statusColIdx] !== statusValue) return;
+    if (courseFilter) {
+      const course = $(this.node()).find('td[data-col="course"]').data('course');
+      if (course !== courseFilter) return;
+    }
     const rowText = cache.join(' ').toLowerCase();
     if (terms.every(term => rowText.includes(term))) count++;
   });
@@ -40,6 +45,17 @@ $(function() {
     return enabled.length === 0 || enabled.includes(searchData[5]);
   });
 
+  // Course filter — only applied to the teachers table, not the admin table
+  $.fn.dataTable.ext.search.push((settings, _data, dataIndex) => {
+    if (!$(settings.nTable).hasClass('js-teachersTable')) return true;
+    const courseFilter = $('#courseFilter').val();
+    if (!courseFilter) return true;
+    const row = settings.aoData[dataIndex].nTr;
+    if (!row) return true;
+    const course = $(row).find('td[data-col="course"]').data('course');
+    return course === courseFilter;
+  });
+
   let $tables = $('.js-dataTable').DataTable({
       dom:
         `<'row form-row'<'col-6 form-inline'i><'col-6 form-inline'lf>>
@@ -64,6 +80,10 @@ $(function() {
   const $teachersTable = $('.js-teachersTable').DataTable();
 
   $(".custom-checkbox").on("change", () => {
+      $tables.draw();
+  });
+
+  $('#courseFilter').on('change', () => {
       $tables.draw();
   });
   $tables.on('draw', function() {

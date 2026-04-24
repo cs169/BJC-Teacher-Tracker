@@ -50,6 +50,62 @@ Feature: Admin Data Tables functionality
     And   I check "Not Reviewed"
     Then  I should not see "hidden by current filter"
 
+  Scenario: Filter teachers by CSP course
+    Given the following schools exist:
+      | name        | country | city     | state | website                  | grade_level | school_type |
+      | UC Berkeley | US      | Berkeley | CA    | https://www.berkeley.edu | university  | public      |
+    Given the following teachers exist:
+      | first_name | last_name       | admin | primary_email                   | school      | status | application_status |
+      | Zqxv       | Zqxvcsptest     | false | zqxvcsptest@zqxvtest.example    | UC Berkeley | 0      | Validated          |
+      | Zqxv       | Zqxvsparkstest  | false | zqxvsparkstest@zqxvtest.example | UC Berkeley | 8      | Validated          |
+      | Zqxv       | Zqxvothertest   | false | zqxvothertest@zqxvtest.example  | UC Berkeley | 1      | Validated          |
+    Given I am on the BJC home page
+    And   I have an admin email
+    And   I follow "Log In"
+    Then  I can log in with Google
+    When  I go to the teachers page
+    And   I fill in the teachers table search with "zqxvtest.example"
+    And   I select "CSP" from "courseFilter"
+    Then  I should see "Zqxvcsptest"
+    And   I should not see "Zqxvsparkstest"
+    And   I should not see "Zqxvothertest"
+
+  Scenario: Filter teachers by Sparks course
+    Given the following schools exist:
+      | name        | country | city     | state | website                  | grade_level | school_type |
+      | UC Berkeley | US      | Berkeley | CA    | https://www.berkeley.edu | university  | public      |
+    Given the following teachers exist:
+      | first_name | last_name       | admin | primary_email                   | school      | status | application_status |
+      | Zqxv       | Zqxvcsptest     | false | zqxvcsptest@zqxvtest.example    | UC Berkeley | 0      | Validated          |
+      | Zqxv       | Zqxvsparkstest  | false | zqxvsparkstest@zqxvtest.example | UC Berkeley | 8      | Validated          |
+    Given I am on the BJC home page
+    And   I have an admin email
+    And   I follow "Log In"
+    Then  I can log in with Google
+    When  I go to the teachers page
+    And   I fill in the teachers table search with "zqxvtest.example"
+    And   I select "Sparks" from "courseFilter"
+    Then  I should see "Zqxvsparkstest"
+    And   I should not see "Zqxvcsptest"
+
+  Scenario: Hidden results notice is course-aware when course filter is active
+    Given the following schools exist:
+      | name        | country | city     | state | website                  | grade_level | school_type |
+      | UC Berkeley | US      | Berkeley | CA    | https://www.berkeley.edu | university  | public      |
+    Given the following teachers exist:
+      | first_name | last_name           | admin | primary_email                       | school      | status | application_status |
+      | Zqxv       | Zqxvcspvalidated    | false | zqxvcspval@zqxvnotice.example       | UC Berkeley | 0      | Validated          |
+      | Zqxv       | Zqxvcspdenied       | false | zqxvcspden@zqxvnotice.example       | UC Berkeley | 0      | Denied             |
+      | Zqxv       | Zqxvsparksdenied    | false | zqxvsparksden@zqxvnotice.example    | UC Berkeley | 8      | Denied             |
+    Given I am on the BJC home page
+    And   I have an admin email
+    And   I follow "Log In"
+    Then  I can log in with Google
+    When  I go to the teachers page
+    And   I fill in the teachers table search with "zqxvnotice.example"
+    And   I select "CSP" from "courseFilter"
+    Then  I should see "1 result(s) in Denied — hidden by current filter"
+
   Scenario: Filter all teacher info as an admin
     Given the following schools exist:
       | name        |     country     | city     | state | website                  | grade_level | school_type |
