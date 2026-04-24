@@ -15,6 +15,7 @@ module SeedData
 
   @form_submission = <<-FORM_SUBMISSION
     <p>
+      View form submission {{view_teacher_url}}<br>
       Here is the information that was submitted: <br>
       Name: {{teacher_first_name}} {{teacher_last_name}} <br>
       Email: {{teacher_email}} <br>

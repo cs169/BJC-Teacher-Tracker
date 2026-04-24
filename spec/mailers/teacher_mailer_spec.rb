@@ -4,7 +4,9 @@ require "rails_helper"
 
 describe TeacherMailer do
   fixtures :all
-  before(:each) do
+
+  before(:all) do
+    ActionMailer::Base.default_url_options = { host: "127.0.0.1", port: 3000, protocol: "http" }
     Rails.application.load_seed
   end
   it "Sends Welcome Email" do
@@ -45,7 +47,17 @@ describe TeacherMailer do
     email.deliver_now
     expect(email.from).to include("contact@bjc.berkeley.edu")
     expect(email.to).to include("lmock@berkeley.edu")
+    expect(email.body.encoded).to include("View form submission")
     expect(email.body.encoded).to include("Short Long")
+  end
+
+  it "renders view_teacher_url in Form Submission email" do
+    teacher = teachers(:long)
+    email = TeacherMailer.form_submission(teacher)
+    email.deliver_now
+
+    expect(email.body.encoded).to include("http://127.0.0.1:3000/teachers/#{teacher.id}")
+    expect(email.body.encoded).not_to include("{{view_teacher_url}}")
   end
 
   it "Sends Request Info Email" do
