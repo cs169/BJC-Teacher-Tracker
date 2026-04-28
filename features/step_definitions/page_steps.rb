@@ -19,7 +19,6 @@ When("I check {string} checkbox") do |checkbox|
   check checkbox
 end
 
-
 When(/^I search the schools table for "([^"]*)"$/) do |query|
   find("#schools-table_filter input").set(query)
 end

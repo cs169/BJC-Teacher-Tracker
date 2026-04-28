@@ -35,7 +35,6 @@ class SchoolDatatable < AjaxDatatablesRails::ActiveRecord
   end
 
   private
-
   SEARCHABLE_COLUMNS = %w[name city state country website].freeze
 
   def filter_records(records)
