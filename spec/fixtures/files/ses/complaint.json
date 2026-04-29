@@ -1,0 +1,19 @@
+{
+  "eventType": "Complaint",
+  "mail": {
+    "timestamp": "2026-04-23T10:00:00.000Z",
+    "source": "noreply@bjc.berkeley.edu",
+    "messageId": "0102abcdef-complaint-1-000000",
+    "destination": ["validated@teacher.edu"]
+  },
+  "complaint": {
+    "complainedRecipients": [
+      {"emailAddress": "validated@teacher.edu"}
+    ],
+    "timestamp": "2026-04-23T10:00:09.000Z",
+    "feedbackId": "0102abcdef-complaint-feedback",
+    "userAgent": "Mozilla/5.0",
+    "complaintFeedbackType": "abuse",
+    "arrivalDate": "2026-04-23T10:00:09.000Z"
+  }
+}

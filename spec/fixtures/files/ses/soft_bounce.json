@@ -1,0 +1,24 @@
+{
+  "eventType": "Bounce",
+  "mail": {
+    "timestamp": "2026-04-23T10:00:00.000Z",
+    "source": "noreply@bjc.berkeley.edu",
+    "messageId": "0102abcdef-soft-bounce-1-000000",
+    "destination": ["validated@teacher.edu"]
+  },
+  "bounce": {
+    "bounceType": "Transient",
+    "bounceSubType": "MailboxFull",
+    "bouncedRecipients": [
+      {
+        "emailAddress": "validated@teacher.edu",
+        "action": "failed",
+        "status": "4.2.2",
+        "diagnosticCode": "smtp; 452 4.2.2 Mailbox full"
+      }
+    ],
+    "timestamp": "2026-04-23T10:00:07.456Z",
+    "feedbackId": "0102abcdef-bounce-feedback-soft",
+    "reportingMTA": "dsn; a8-33.smtp-out.amazonses.com"
+  }
+}
