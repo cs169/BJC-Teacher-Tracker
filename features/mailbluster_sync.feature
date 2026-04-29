@@ -14,14 +14,15 @@ Feature: MailBluster email sync
     | Mbluster   | Validated  | false | mb_validated@teacher.edu   | UC Berkeley | Validated          |
     | Mbluster   | Pending    | false | mb_pending@teacher.edu     | UC Berkeley | Not Reviewed       |
 
-  Scenario: Admin sees MailBluster sync information on teacher show page
+  Scenario: Admin sees Email Sync card on teacher show page
     Given I am on the BJC home page
     Given I have an admin email
     And I follow "Log In"
     Then I can log in with Google
     When I go to the teachers page
     And I follow "Mbluster Validated"
-    Then I should see "MailBluster Sync"
+    Then I should see "Email Sync"
+    And I should see "MailBluster ID"
     And I should see "Not synced"
     And I should see a button named "Sync to MailBluster"
 
@@ -49,11 +50,13 @@ Feature: MailBluster email sync
     Then I can log in with Google
     When I go to the teachers page
     And I follow "Mbluster Validated"
-    Then I should see "Sent: 0"
+    Then I should see "Email Delivery Stats"
+    And I should see "Sent: 0"
     And I should see "Delivered: 0"
-    And I should see "Bounced: No"
+    And I should see "Soft Bounces: 0"
+    And I should see "Hard Bounces: 0"
 
-  Scenario: Admin sees MailBluster section for pending teacher
+  Scenario: Admin sees Email Sync section for pending teacher
     Given I am on the BJC home page
     Given I have an admin email
     And I follow "Log In"
@@ -61,7 +64,7 @@ Feature: MailBluster email sync
     When I go to the teachers page
     And I check "Not Reviewed"
     And I follow "Mbluster Pending"
-    Then I should see "MailBluster Sync"
+    Then I should see "Email Sync"
     And I should see "Not synced"
 
   Scenario: Non-admin cannot see MailBluster sync controls
