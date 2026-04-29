@@ -1,0 +1,12 @@
+{
+  "eventType": "Reject",
+  "mail": {
+    "timestamp": "2026-04-23T10:00:00.000Z",
+    "source": "noreply@bjc.berkeley.edu",
+    "messageId": "0102abcdef-reject-1-000000",
+    "destination": ["validated@teacher.edu"]
+  },
+  "reject": {
+    "reason": "Bad content"
+  }
+}

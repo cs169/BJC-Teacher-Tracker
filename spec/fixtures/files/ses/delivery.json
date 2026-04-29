@@ -1,0 +1,22 @@
+{
+  "eventType": "Delivery",
+  "mail": {
+    "timestamp": "2026-04-23T10:00:00.000Z",
+    "source": "noreply@bjc.berkeley.edu",
+    "messageId": "0102abcdef-delivery-1-000000",
+    "destination": ["validated@teacher.edu"],
+    "headersTruncated": false,
+    "commonHeaders": {
+      "from": ["noreply@bjc.berkeley.edu"],
+      "to": ["validated@teacher.edu"],
+      "subject": "Welcome"
+    }
+  },
+  "delivery": {
+    "timestamp": "2026-04-23T10:00:05.123Z",
+    "processingTimeMillis": 5123,
+    "recipients": ["validated@teacher.edu"],
+    "smtpResponse": "250 2.6.0 Message accepted",
+    "reportingMTA": "a8-33.smtp-out.amazonses.com"
+  }
+}
