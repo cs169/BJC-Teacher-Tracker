@@ -43,4 +43,6 @@ Rails.application.routes.draw do
 
   get "school_merge/:from/:into/preview", to: "merge#school_preview", as: "preview_school_merge"
   patch "school_merge/:from/:into/execute", to: "merge#school_execute", as: "school_merge"
+
+  post "/webhooks/ses", to: "webhooks/ses_notifications#create", as: "ses_webhook"
 end
