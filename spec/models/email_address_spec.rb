@@ -4,15 +4,18 @@
 #
 # Table name: email_addresses
 #
-#  id               :bigint           not null, primary key
-#  bounced          :boolean          default(FALSE), not null
-#  email            :string           not null
-#  emails_delivered :integer          default(0), not null
-#  emails_sent      :integer          default(0), not null
-#  primary          :boolean          default(FALSE), not null
-#  created_at       :datetime         not null
-#  updated_at       :datetime         not null
-#  teacher_id       :bigint           not null
+#  id                :bigint           not null, primary key
+#  bounced           :boolean          default(FALSE), not null
+#  email             :string           not null
+#  emails_delivered  :integer          default(0), not null
+#  emails_sent       :integer          default(0), not null
+#  hard_bounce_count :integer          default(0), not null
+#  last_ses_event_at :datetime
+#  primary           :boolean          default(FALSE), not null
+#  soft_bounce_count :integer          default(0), not null
+#  created_at        :datetime         not null
+#  updated_at        :datetime         not null
+#  teacher_id        :bigint           not null
 #
 # Indexes
 #
@@ -97,6 +100,32 @@ RSpec.describe EmailAddress, type: :model do
 
       it "is not bounced by default" do
         expect(email.bounced?).to be false
+      end
+
+      it "has 0 soft_bounce_count by default" do
+        expect(email.soft_bounce_count).to eq(0)
+      end
+
+      it "has 0 hard_bounce_count by default" do
+        expect(email.hard_bounce_count).to eq(0)
+      end
+
+      it "has nil last_ses_event_at by default" do
+        expect(email.last_ses_event_at).to be_nil
+      end
+    end
+
+    describe "ses_delivery_events association" do
+      it "destroys associated events when the email address is destroyed" do
+        event = SesDeliveryEvent.create!(
+          email_address: email,
+          sns_message_id: "sns-1",
+          event_type: "Delivery",
+          recipient_email: email.email,
+          event_occurred_at: Time.current
+        )
+        expect { email.destroy! }.to change(SesDeliveryEvent, :count).by(-1)
+        expect(SesDeliveryEvent.where(id: event.id)).to be_empty
       end
     end
   end
