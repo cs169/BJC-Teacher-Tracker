@@ -1,5 +1,23 @@
 # frozen_string_literal: true
 
+# == Schema Information
+#
+# Table name: email_templates
+#
+#  id         :bigint           not null, primary key
+#  body       :text
+#  format     :string
+#  handler    :string
+#  locale     :string
+#  partial    :boolean
+#  path       :string
+#  required   :boolean          default(FALSE)
+#  subject    :string
+#  title      :string
+#  to         :string
+#  created_at :datetime         not null
+#  updated_at :datetime         not null
+#
 require "rails_helper"
 
 RSpec.describe EmailTemplate, type: :model do
