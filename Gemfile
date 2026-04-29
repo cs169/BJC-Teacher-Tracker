@@ -40,6 +40,9 @@ gem "liquid"
 # Store uploaded files
 gem "aws-sdk-s3", require: false
 
+# Verify signatures on SNS webhook deliveries
+gem "aws-sdk-sns", "~> 1", require: false
+
 # Render images for file uploads in pages
 gem "image_processing", ">= 1.2"
 
