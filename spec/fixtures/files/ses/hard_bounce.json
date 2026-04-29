@@ -1,0 +1,24 @@
+{
+  "eventType": "Bounce",
+  "mail": {
+    "timestamp": "2026-04-23T10:00:00.000Z",
+    "source": "noreply@bjc.berkeley.edu",
+    "messageId": "0102abcdef-hard-bounce-1-000000",
+    "destination": ["validated@teacher.edu"]
+  },
+  "bounce": {
+    "bounceType": "Permanent",
+    "bounceSubType": "General",
+    "bouncedRecipients": [
+      {
+        "emailAddress": "validated@teacher.edu",
+        "action": "failed",
+        "status": "5.1.1",
+        "diagnosticCode": "smtp; 550 5.1.1 User unknown"
+      }
+    ],
+    "timestamp": "2026-04-23T10:00:07.456Z",
+    "feedbackId": "0102abcdef-bounce-feedback-hard",
+    "reportingMTA": "dsn; a8-33.smtp-out.amazonses.com"
+  }
+}

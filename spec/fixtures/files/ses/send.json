@@ -1,0 +1,18 @@
+{
+  "eventType": "Send",
+  "mail": {
+    "timestamp": "2026-04-23T10:00:00.000Z",
+    "source": "noreply@bjc.berkeley.edu",
+    "sourceArn": "arn:aws:ses:us-west-2:123456789012:identity/bjc.berkeley.edu",
+    "sendingAccountId": "123456789012",
+    "messageId": "0102abcdef-send-1-000000",
+    "destination": ["validated@teacher.edu"],
+    "headersTruncated": false,
+    "commonHeaders": {
+      "from": ["noreply@bjc.berkeley.edu"],
+      "to": ["validated@teacher.edu"],
+      "subject": "Welcome"
+    }
+  },
+  "send": {}
+}
