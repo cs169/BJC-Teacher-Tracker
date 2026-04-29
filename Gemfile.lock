@@ -109,6 +109,9 @@ GEM
       aws-sdk-core (~> 3, >= 3.127.0)
       aws-sdk-kms (~> 1)
       aws-sigv4 (~> 1.4)
+    aws-sdk-sns (1.55.0)
+      aws-sdk-core (~> 3, >= 3.127.0)
+      aws-sigv4 (~> 1.1)
     aws-sigv4 (1.4.0)
       aws-eventstream (~> 1, >= 1.0.2)
     axe-core-api (4.3.2)
@@ -573,6 +576,7 @@ DEPENDENCIES
   ajax-datatables-rails
   annotate
   aws-sdk-s3
+  aws-sdk-sns (~> 1)
   axe-core-cucumber
   axe-core-rspec
   bootsnap (>= 1.4.4)
