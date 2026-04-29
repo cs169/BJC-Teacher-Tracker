@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_04_10_002004) do
+ActiveRecord::Schema.define(version: 2026_04_24_000002) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_stat_statements"
@@ -63,6 +63,9 @@ ActiveRecord::Schema.define(version: 2026_04_10_002004) do
     t.integer "emails_sent", default: 0, null: false
     t.integer "emails_delivered", default: 0, null: false
     t.boolean "bounced", default: false, null: false
+    t.integer "soft_bounce_count", default: 0, null: false
+    t.integer "hard_bounce_count", default: 0, null: false
+    t.datetime "last_ses_event_at"
     t.index ["email"], name: "index_email_addresses_on_email", unique: true
     t.index ["teacher_id", "primary"], name: "index_email_addresses_on_teacher_id_and_primary", unique: true, where: "(\"primary\" = true)"
     t.index ["teacher_id"], name: "index_email_addresses_on_teacher_id"
@@ -137,6 +140,22 @@ ActiveRecord::Schema.define(version: 2026_04_10_002004) do
     t.index ["name", "city", "website"], name: "index_schools_on_name_city_and_website"
   end
 
+  create_table "ses_delivery_events", force: :cascade do |t|
+    t.bigint "email_address_id"
+    t.string "sns_message_id", null: false
+    t.string "event_type", null: false
+    t.string "bounce_type"
+    t.string "recipient_email", null: false
+    t.datetime "event_occurred_at", null: false
+    t.jsonb "payload", default: {}, null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["email_address_id"], name: "index_ses_delivery_events_on_email_address_id"
+    t.index ["event_type"], name: "index_ses_delivery_events_on_event_type"
+    t.index ["recipient_email"], name: "index_ses_delivery_events_on_recipient_email"
+    t.index ["sns_message_id", "recipient_email"], name: "idx_ses_events_dedupe", unique: true
+  end
+
   create_table "teachers", id: :serial, force: :cascade do |t|
     t.string "first_name"
     t.string "last_name"
@@ -175,5 +194,6 @@ ActiveRecord::Schema.define(version: 2026_04_10_002004) do
   add_foreign_key "pages", "teachers", column: "last_editor_id"
   add_foreign_key "pd_registrations", "professional_developments"
   add_foreign_key "pd_registrations", "teachers"
+  add_foreign_key "ses_delivery_events", "email_addresses"
   add_foreign_key "teachers", "schools"
 end
