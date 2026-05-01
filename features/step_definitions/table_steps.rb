@@ -1,5 +1,9 @@
 # frozen_string_literal: true
 
+When(/^I fill in the teachers table search with "([^"]*)"$/) do |value|
+  first(".js-teachersTable").ancestor(".dataTables_wrapper").find(".dataTables_filter input").set(value)
+end
+
 Given(/^I should see "(.*)" with "(.*)" in a table row$/) do |field_1, field_2|
   both = false
   page.find_all("tr").each do |table_row|

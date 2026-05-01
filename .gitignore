@@ -162,3 +162,6 @@ cc-test-reporter
 
 # CSV data files
 *.csv
+
+*.claude/
+CLAUDE.md
