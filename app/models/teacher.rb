@@ -4,31 +4,35 @@
 #
 # Table name: teachers
 #
-#  id                 :integer          not null, primary key
-#  admin              :boolean          default(FALSE)
-#  application_status :string           default("not_reviewed")
-#  education_level    :integer          default(NULL)
-#  email              :string
-#  first_name         :string
-#  ip_history         :inet             default([]), is an Array
-#  languages          :string           default(["\"English\""]), is an Array
-#  last_name          :string
-#  last_session_at    :datetime
-#  more_info          :string
-#  personal_email     :string
-#  personal_website   :string
-#  session_count      :integer          default(0)
-#  snap               :string
-#  status             :integer
-#  created_at         :datetime
-#  updated_at         :datetime
-#  school_id          :integer
+#  id                    :integer          not null, primary key
+#  admin                 :boolean          default(FALSE)
+#  application_status    :string           default("not_reviewed")
+#  education_level       :integer          default(NULL)
+#  email                 :string
+#  first_name            :string
+#  ip_history            :inet             default([]), is an Array
+#  languages             :string           default(["\"English\""]), is an Array
+#  last_name             :string
+#  last_session_at       :datetime
+#  mailbluster_synced_at :datetime
+#  more_info             :string
+#  personal_email        :string
+#  personal_website      :string
+#  session_count         :integer          default(0)
+#  snap                  :string
+#  status                :integer
+#  verification_notes    :text
+#  created_at            :datetime
+#  updated_at            :datetime
+#  mailbluster_id        :integer
+#  school_id             :integer
 #
 # Indexes
 #
 #  index_teachers_on_email                     (email) UNIQUE
 #  index_teachers_on_email_and_first_name      (email,first_name)
 #  index_teachers_on_email_and_personal_email  (email,personal_email) UNIQUE
+#  index_teachers_on_mailbluster_id            (mailbluster_id) UNIQUE
 #  index_teachers_on_school_id                 (school_id)
 #  index_teachers_on_snap                      (snap) UNIQUE WHERE ((snap)::text <> ''::text)
 #  index_teachers_on_status                    (status)
@@ -311,15 +315,44 @@ class Teacher < ApplicationRecord
       school_website
       school_grade_level
       school_type
+      mailbluster_id
+      primary_email_sent
+      primary_email_delivered
+      primary_email_bounced
     |
 
     CSV.generate(headers: true) do |csv|
       csv << attributes
 
-      Teacher.where(admin: false).find_each do |user|
+      Teacher.where(admin: false).includes(:email_addresses).find_each do |user|
         csv << attributes.map { |attr| user.send(attr) }
       end
     end
+  end
+
+  def mailbluster_synced?
+    mailbluster_id.present?
+  end
+
+  def mailbluster_profile_url
+    return nil unless mailbluster_id.present?
+    "https://app.mailbluster.com/leads/#{mailbluster_id}"
+  end
+
+  def primary_email_address
+    email_addresses.find_by(primary: true)
+  end
+
+  def primary_email_sent
+    primary_email_address&.emails_sent || 0
+  end
+
+  def primary_email_delivered
+    primary_email_address&.emails_delivered || 0
+  end
+
+  def primary_email_bounced
+    primary_email_address&.bounced? ? "Yes" : "No"
   end
 
   private

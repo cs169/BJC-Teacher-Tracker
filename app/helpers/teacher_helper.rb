@@ -13,7 +13,23 @@ module TeacherHelper
   end
 
   def email_address_label(email)
-    return unless email.primary?
-    '&nbsp; <span class="badge badge-pill badge-primary h6">primary</span>'.html_safe
+    labels = []
+    labels << '<span class="badge badge-pill badge-primary h6">primary</span>' if email.primary?
+    labels << '<span class="badge badge-pill badge-danger h6">bounced</span>' if email.bounced?
+    return nil if labels.empty?
+    "&nbsp; #{labels.join(' ')}".html_safe
+  end
+
+  def mailbluster_sync_status(teacher)
+    if teacher.mailbluster_synced?
+      url = teacher.mailbluster_profile_url
+      if url
+        link_to('<span class="badge badge-success">Synced</span>'.html_safe, url, target: "_blank", title: "View in MailBluster")
+      else
+        '<span class="badge badge-success">Synced</span>'.html_safe
+      end
+    else
+      '<span class="badge badge-secondary">Not Synced</span>'.html_safe
+    end
   end
 end

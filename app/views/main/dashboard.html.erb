@@ -4,14 +4,14 @@
   <table class="table js-dataTable">
     <thead class="thead-dark">
     <tr>
-      <%= render 'teachers/table_headers', include_id: false %>
+      <%= render 'teachers/table_headers', include_id: false, show_mailbluster: false %>
       <th scope="col">Actions</th>
     </tr>
     </thead>
     <tbody>
     <% @unreviewed_teachers.each do |teacher| %>
       <tr>
-        <%= render 'teachers/teacher', teacher: teacher, merge_table: false %>
+        <%= render 'teachers/teacher', teacher: teacher, merge_table: false, show_mailbluster: false %>
         <td>
           <div class="btn-group" role="group" aria-label="Validate or Remove Teacher">
             <%= button_to("✔️", validate_teacher_path(teacher.id),

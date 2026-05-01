@@ -16,9 +16,13 @@ Rails.application.routes.draw do
       post :validate
       post :deny
       post :request_info
+      post :sync_mailbluster
       delete "remove_file", to: "teachers#remove_file"
     end
-    collection { post :import }
+    collection do
+      post :import
+      post :sync_all_mailbluster
+    end
   end
   resources :schools
   resources :pages, param: :url_slug

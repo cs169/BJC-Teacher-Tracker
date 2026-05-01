@@ -5,7 +5,7 @@ require "rails_helper"
 RSpec.describe EmailTemplatesController, type: :controller do
   fixtures :all
 
-  before(:all) do
+  before(:each) do
     Rails.application.load_seed
   end
 

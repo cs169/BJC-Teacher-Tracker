@@ -14,6 +14,50 @@
   </div>
 </div>
 
+<% if @is_admin %>
+<hr>
+<div class="card mt-3">
+  <div class="card-header">
+    <h5>MailBluster Sync</h5>
+  </div>
+  <div class="card-body">
+    <div class="row mb-2">
+      <div class="col-sm-3 font-weight-bold">MailBluster ID:</div>
+      <div class="col-sm-9">
+        <% if @teacher.mailbluster_id.present? %>
+          <%= @teacher.mailbluster_id %>
+          (<a href="https://app.mailbluster.com/leads/<%= @teacher.mailbluster_id %>" target="_blank">View in MailBluster</a>)
+        <% else %>
+          Not synced
+        <% end %>
+      </div>
+    </div>
+    <div class="row mb-2">
+      <div class="col-sm-3 font-weight-bold">Last Synced:</div>
+      <div class="col-sm-9">
+        <%= @teacher.mailbluster_synced_at&.strftime("%B %d, %Y %H:%M %Z") || "Never" %>
+      </div>
+    </div>
+    <% @teacher.email_addresses.each do |email_addr| %>
+      <div class="row mb-1">
+        <div class="col-sm-3 font-weight-bold"><%= email_addr.email %>:</div>
+        <div class="col-sm-9">
+          Sent: <%= email_addr.emails_sent %> |
+          Delivered: <%= email_addr.emails_delivered %> |
+          Bounced: <%= email_addr.bounced? ? '<span class="badge badge-danger">Yes</span>'.html_safe : '<span class="badge badge-success">No</span>'.html_safe %>
+        </div>
+      </div>
+    <% end %>
+    <div class="mt-3">
+      <%= button_to "Sync to MailBluster",
+          sync_mailbluster_teacher_path(@teacher),
+          method: :post,
+          class: "btn btn-warning btn-sm" %>
+    </div>
+  </div>
+</div>
+<% end %>
+
 <!-- Merge Modal -->
 <div id="merge-modal" class="merge_modal">
   <!-- Modal content -->

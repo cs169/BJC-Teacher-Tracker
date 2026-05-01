@@ -4,12 +4,15 @@
 #
 # Table name: email_addresses
 #
-#  id         :bigint           not null, primary key
-#  email      :string           not null
-#  primary    :boolean          default(FALSE), not null
-#  created_at :datetime         not null
-#  updated_at :datetime         not null
-#  teacher_id :bigint           not null
+#  id               :bigint           not null, primary key
+#  bounced          :boolean          default(FALSE), not null
+#  email            :string           not null
+#  emails_delivered :integer          default(0), not null
+#  emails_sent      :integer          default(0), not null
+#  primary          :boolean          default(FALSE), not null
+#  created_at       :datetime         not null
+#  updated_at       :datetime         not null
+#  teacher_id       :bigint           not null
 #
 # Indexes
 #

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_02_21_120000) do
+ActiveRecord::Schema.define(version: 2026_04_10_002004) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_stat_statements"
@@ -60,6 +60,9 @@ ActiveRecord::Schema.define(version: 2026_02_21_120000) do
     t.boolean "primary", default: false, null: false
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+    t.integer "emails_sent", default: 0, null: false
+    t.integer "emails_delivered", default: 0, null: false
+    t.boolean "bounced", default: false, null: false
     t.index ["email"], name: "index_email_addresses_on_email", unique: true
     t.index ["teacher_id", "primary"], name: "index_email_addresses_on_teacher_id_and_primary", unique: true, where: "(\"primary\" = true)"
     t.index ["teacher_id"], name: "index_email_addresses_on_teacher_id"
@@ -154,9 +157,12 @@ ActiveRecord::Schema.define(version: 2026_02_21_120000) do
     t.string "personal_email"
     t.string "languages", default: ["English"], array: true
     t.text "verification_notes"
+    t.integer "mailbluster_id"
+    t.datetime "mailbluster_synced_at"
     t.index ["email", "first_name"], name: "index_teachers_on_email_and_first_name"
     t.index ["email", "personal_email"], name: "index_teachers_on_email_and_personal_email", unique: true
     t.index ["email"], name: "index_teachers_on_email", unique: true
+    t.index ["mailbluster_id"], name: "index_teachers_on_mailbluster_id", unique: true
     t.index ["school_id"], name: "index_teachers_on_school_id"
     t.index ["snap"], name: "index_teachers_on_snap", unique: true, where: "((snap)::text <> ''::text)"
     t.index ["status"], name: "index_teachers_on_status"

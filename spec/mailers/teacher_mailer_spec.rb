@@ -4,7 +4,7 @@ require "rails_helper"
 
 describe TeacherMailer do
   fixtures :all
-  before(:all) do
+  before(:each) do
     Rails.application.load_seed
   end
   it "Sends Welcome Email" do

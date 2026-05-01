@@ -10,10 +10,10 @@ class TeachersController < ApplicationController
   include CsvProcess
 
   before_action :load_pages, only: [:new, :create, :edit, :update]
-  before_action :load_teacher, except: [:new, :index, :create, :import, :search]
+  before_action :load_teacher, except: [:new, :index, :create, :import, :search, :sync_all_mailbluster]
   before_action :sanitize_params, only: [:new, :create, :edit, :update]
   before_action :require_login, except: [:new, :create]
-  before_action :require_admin, only: [:validate, :deny, :destroy, :index, :show, :search]
+  before_action :require_admin, only: [:validate, :deny, :destroy, :index, :show, :search, :sync_mailbluster, :sync_all_mailbluster]
   before_action :require_edit_permission, only: [:edit, :update, :resend_welcome_email]
 
   rescue_from ActiveRecord::RecordNotUnique, with: :deny_access
@@ -131,6 +131,7 @@ class TeachersController < ApplicationController
 
     attach_new_files_if_any
     send_email_if_application_status_changed_and_email_resend_enabled
+    sync_to_mailbluster_if_status_changed
 
     if fail_to_update
       return
@@ -162,6 +163,19 @@ class TeachersController < ApplicationController
     end
   end
 
+  def sync_to_mailbluster_if_status_changed
+    return unless MailblusterService.configured?
+    return unless @teacher.application_status_changed?
+
+    if @teacher.validated?
+      MailblusterService.create_or_update_lead(@teacher)
+    elsif @teacher.application_status_was == "validated"
+      # If teacher was validated but status changed away, update MailBluster
+      # to mark them as unsubscribed
+      MailblusterService.create_or_update_lead(@teacher)
+    end
+  end
+
   def request_info
     @teacher.info_needed!
     if !params[:skip_email].present?
@@ -173,6 +187,7 @@ class TeachersController < ApplicationController
   def validate
     @teacher.validated!
     TeacherMailer.welcome_email(@teacher).deliver_now
+    MailblusterService.create_or_update_lead(@teacher) if MailblusterService.configured?
     redirect_to root_path
   end
 
@@ -185,6 +200,9 @@ class TeachersController < ApplicationController
   end
 
   def destroy
+    if MailblusterService.configured? && @teacher.primary_email.present?
+      MailblusterService.delete_lead(@teacher.primary_email)
+    end
     @teacher.destroy!
     flash[:info] = "Deleted #{@teacher.full_name} successfully."
     redirect_to teachers_path
@@ -205,6 +223,34 @@ class TeachersController < ApplicationController
     teacher_hash_array = SmarterCSV.process(csv_file)
     csv_import_summary_hash = process_record(teacher_hash_array)
     add_flash_message(csv_import_summary_hash)
+    redirect_to teachers_path
+  end
+
+  def sync_mailbluster
+    unless MailblusterService.configured?
+      redirect_to teacher_path(@teacher), alert: "MailBluster API key is not configured."
+      return
+    end
+
+    result = MailblusterService.sync_teacher(@teacher)
+    if result[:success]
+      redirect_to teacher_path(@teacher), notice: "Successfully synced #{@teacher.full_name} to MailBluster."
+    else
+      redirect_to teacher_path(@teacher), alert: "Failed to sync #{@teacher.full_name} to MailBluster. #{result[:error]}"
+    end
+  end
+
+  def sync_all_mailbluster
+    unless MailblusterService.configured?
+      redirect_to teachers_path, alert: "MailBluster API key is not configured."
+      return
+    end
+
+    results = MailblusterService.sync_all_teachers
+    flash[:notice] = "MailBluster sync complete: #{results[:synced]} synced, #{results[:failed]} failed, #{results[:skipped]} skipped."
+    if results[:errors].any?
+      flash[:alert] = "Errors: #{results[:errors].first(5).join('; ')}"
+    end
     redirect_to teachers_path
   end
 
