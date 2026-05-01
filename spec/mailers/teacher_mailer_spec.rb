@@ -6,7 +6,6 @@ describe TeacherMailer do
   fixtures :all
 
   before(:all) do
-    ActionMailer::Base.default_url_options = { host: "127.0.0.1", port: 3000, protocol: "http" }
     Rails.application.load_seed
   end
   it "Sends Welcome Email" do
@@ -56,7 +55,7 @@ describe TeacherMailer do
     email = TeacherMailer.form_submission(teacher)
     email.deliver_now
 
-    expect(email.body.encoded).to include("http://127.0.0.1:3000/teachers/#{teacher.id}")
+    expect(email.body.encoded).to include(Rails.application.routes.url_helpers.teacher_url(teacher))
     expect(email.body.encoded).not_to include("{{view_teacher_url}}")
   end
 
