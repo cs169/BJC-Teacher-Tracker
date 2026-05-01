@@ -254,6 +254,134 @@ RSpec.describe SchoolsController, type: :request do
   end
 end
 
+RSpec.describe "Schools DataTables JSON API", type: :request do
+  fixtures :all
+
+  let(:admin_teacher) { teachers(:admin) }
+
+  before { log_in(admin_teacher) }
+
+  def datatable_params(overrides = {})
+    {
+      draw: "1", start: "0", length: "100",
+      search: { value: "" },
+      columns: {
+        "0" => { data: "name", searchable: "true", orderable: "true", search: { value: "" } },
+        "1" => { data: "location", searchable: "true", orderable: "true", search: { value: "" } },
+        "2" => { data: "country", searchable: "true", orderable: "true", search: { value: "" } },
+        "3" => { data: "website", searchable: "true", orderable: "true", search: { value: "" } },
+        "4" => { data: "teachers_count", searchable: "false", orderable: "true", search: { value: "" } },
+        "5" => { data: "grade_level", searchable: "false", orderable: "true", search: { value: "" } },
+        "6" => { data: "actions", searchable: "false", orderable: "false", search: { value: "" } }
+      },
+      order: { "0" => { column: "0", dir: "asc" } }
+    }.deep_merge(overrides)
+  end
+
+  describe "GET /schools.json" do
+    it "returns JSON with DataTables structure" do
+      get schools_path(format: :json), params: datatable_params
+      expect(response).to have_http_status(:ok)
+      json = JSON.parse(response.body)
+      expect(json).to have_key("draw")
+      expect(json).to have_key("recordsTotal")
+      expect(json).to have_key("recordsFiltered")
+      expect(json).to have_key("data")
+    end
+
+    it "returns correct recordsTotal and recordsFiltered counts" do
+      total = School.count
+      get schools_path(format: :json), params: datatable_params
+      json = JSON.parse(response.body)
+      expect(json["recordsTotal"]).to eq(total)
+      expect(json["recordsFiltered"]).to eq(total)
+      expect(json["data"].length).to eq(total)
+    end
+
+    it "returns expected attributes for each school record" do
+      school = School.create!(
+        name: "Test Academy", city: "Springfield", state: "IL",
+        country: "US", website: "https://test.edu",
+        grade_level: :high_school, school_type: :public
+      )
+      get schools_path(format: :json), params: datatable_params
+      json = JSON.parse(response.body)
+      entry = json["data"].find { |d| d["DT_RowId"].to_i == school.id }
+      expect(entry).to be_present
+      expect(entry["name"]).to include("Test Academy")
+      expect(entry["name"]).to include(school_path(school))
+      expect(entry["location"]).to include("Springfield")
+      expect(entry["country"]).to eq("US")
+      expect(entry["website"]).to include("https://test.edu")
+      expect(entry["grade_level"]).to include("High School")
+      expect(entry["actions"]).to include("Edit")
+      expect(entry["actions"]).to include(edit_school_path(school))
+    end
+
+    it "filters by name" do
+      School.create!(
+        name: "Unique Zebra School", city: "Denver", state: "CO",
+        country: "US", website: "https://zebra.edu",
+        grade_level: :high_school, school_type: :public
+      )
+      get schools_path(format: :json), params: datatable_params(search: { value: "Unique Zebra" })
+      json = JSON.parse(response.body)
+      expect(json["recordsFiltered"]).to eq(1)
+      expect(json["data"].first["name"]).to include("Unique Zebra School")
+    end
+
+    it "filters by state" do
+      School.create!(
+        name: "Xylophone Academy", city: "Juneau", state: "AK",
+        country: "US", website: "https://xylophone.edu",
+        grade_level: :high_school, school_type: :public
+      )
+      get schools_path(format: :json), params: datatable_params(search: { value: "AK" })
+      json = JSON.parse(response.body)
+      names = json["data"].map { |d| d["name"] }
+      expect(names.any? { |n| n.include?("Xylophone Academy") }).to be true
+    end
+
+    it "filters by city" do
+      School.create!(
+        name: "Quokka School", city: "Wollongong", state: "NSW",
+        country: "AU", website: "https://quokka.edu",
+        grade_level: :high_school, school_type: :public
+      )
+      get schools_path(format: :json), params: datatable_params(search: { value: "Wollongong" })
+      json = JSON.parse(response.body)
+      expect(json["data"].any? { |d| d["name"].include?("Quokka School") }).to be true
+    end
+
+    it "filters by website" do
+      School.create!(
+        name: "Narwhal Institute", city: "Oslo", state: "Oslo",
+        country: "NO", website: "https://narwhal-unique.edu",
+        grade_level: :university, school_type: :public
+      )
+      get schools_path(format: :json), params: datatable_params(search: { value: "narwhal-unique" })
+      json = JSON.parse(response.body)
+      expect(json["data"].any? { |d| d["name"].include?("Narwhal Institute") }).to be true
+    end
+
+    it "paginates results with start and length" do
+      total = School.count
+      get schools_path(format: :json), params: datatable_params(start: "0", length: "2")
+      json = JSON.parse(response.body)
+      expect(json["data"].length).to eq(2)
+      expect(json["recordsTotal"]).to eq(total)
+      expect(json["recordsFiltered"]).to eq(total)
+    end
+  end
+
+  describe "GET /schools (HTML)" do
+    it "renders a table with id schools-table for DataTables init" do
+      get schools_path
+      expect(response.body).to include('id="schools-table"')
+    end
+  end
+end
+
 RSpec.describe SchoolsController, type: :controller do
   let(:school) { double("School", id: 1, name: "Test School") }
 
@@ -263,11 +391,8 @@ RSpec.describe SchoolsController, type: :controller do
   end
 
   describe "GET #index" do
-    it "assigns all schools ordered by name to @schools" do
-      schools = [double("School", name: "School A"), double("School", name: "School B"), double("School", name: "School C")]
-      allow(School).to receive_message_chain(:all, :order).and_return(schools)
+    it "renders the index template" do
       get :index
-      expect(assigns(:schools)).to eq(schools)
       expect(response).to render_template("index")
     end
   end
