@@ -14,10 +14,10 @@ module TeacherHelper
 
   def email_address_label(email)
     labels = []
-    labels << '<span class="badge badge-pill badge-primary h6">primary</span>' if email.primary?
-    labels << '<span class="badge badge-pill badge-danger h6">bounced</span>' if email.bounced?
+    labels << '<span class="primary-email-dot" data-toggle="tooltip" data-placement="top" title="Primary email"></span>' if email.primary?
+    labels << '<span class="bounced-email-dot" data-toggle="tooltip" data-placement="top" title="Bounced email"></span>' if email.bounced?
     return nil if labels.empty?
-    "&nbsp; #{labels.join(' ')}".html_safe
+    labels.join("").html_safe
   end
 
   def mailbluster_sync_status(teacher)

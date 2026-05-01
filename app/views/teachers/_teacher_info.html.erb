@@ -35,9 +35,9 @@
     <div class="row mb-3">
       <div class="col-sm-3 font-weight-bold">Emails:</div>
         <ul class="list-unstyled col-sm-9">
-          <% teacher.email_addresses.each do |email| %>
+          <% teacher.email_addresses.sort_by { |e| e.primary? ? 0 : 1 }.each do |email| %>
             <li class="email-list-item">
-              <a href="mailto:<%= email.email %>" class="mr-2"><%= email.email %></a>
+              <%= email_address_label(email) %><a href="mailto:<%= email.email %>" class="mr-2"><%= email.email %></a>
               <button class="btn btn-sm" onclick="copyToClipboard('<%= email.email %>')"><i class="fa fa-copy"></i></button>
               <% if @is_admin || @is_teacher %>
                 <%= link_to teacher_delete_email_address_path(teacher, email),
@@ -48,7 +48,6 @@
                   <i class="fa fa-times"></i>
                 <% end %>
               <% end %>
-              <%= email_address_label(email) %>
             </li>
         <% end %></ul>
     </div>
