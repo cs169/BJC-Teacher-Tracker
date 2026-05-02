@@ -24,25 +24,30 @@ Given(/^I set my application status as "(.*)"$/) do |input|
   select(input, from: "application_status_select_value")
 end
 
-# Locates the selectize widget that wraps the teacher#languages <select>.
-# The school selectize on the same form also renders a `.selectize-input`,
-# so anchoring to the languages select element by id keeps this stable
-# regardless of which widget initializes first.
-def languages_selectize
-  find("#teacher_languages", visible: :all).find(:xpath, "./following-sibling::div[contains(@class, 'selectize-control')][1]//div[contains(@class, 'selectize-input')]")
+# Drive the languages Selectize widget through its public API instead of the
+# DOM. The school selectize lives on the same form, so simulated UI clicks
+# raced against widget initialization in the past; using the API is
+# deterministic and waits for Selectize to be initialized.
+def wait_for_languages_selectize!
+  Timeout.timeout(Capybara.default_max_wait_time) do
+    sleep 0.05 until page.evaluate_script("(function(){var el=document.getElementById('teacher_languages'); return !!(el && el.selectize);})()")
+  end
 end
 
 When(/^I select "(.*?)" from the languages dropdown$/) do |option|
-  languages_selectize.click
-  find(".selectize-dropdown.active .selectize-dropdown-content .option", text: option).click
+  wait_for_languages_selectize!
+  page.execute_script("document.getElementById('teacher_languages').selectize.addItem(#{option.to_json}, false)")
 end
 
 When(/^I remove "(.*?)" from the languages dropdown$/) do |item|
-  languages_selectize.find(".item", text: item).find(".remove").click
+  wait_for_languages_selectize!
+  page.execute_script("document.getElementById('teacher_languages').selectize.removeItem(#{item.to_json}, false)")
 end
 
 Then(/^the languages dropdown should have the option "(.*?)" selected$/) do |selected_option|
-  expect(languages_selectize.find(".item", text: selected_option)).to be_visible
+  wait_for_languages_selectize!
+  items = page.evaluate_script("document.getElementById('teacher_languages').selectize.items")
+  expect(items).to include(selected_option)
 end
 
 Given(/^I set my request reason as "(.*)"$/) do |input|
