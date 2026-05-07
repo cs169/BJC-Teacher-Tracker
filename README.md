@@ -159,6 +159,35 @@ If bundler install runs successfully, continue with the following commands to co
 - `heroku config:set ...` for each of the environment variables.
 - `heroku open`
 
+## Staging Data
+
+Populates a staging database with realistic sample data (~500 schools, ~700 teachers, PD events, and registrations). Run **after** `db:seed`. Never runs in production. Note that rows with invalid/missing data will not be seeded.
+
+**Requires:** `BACKEND_MAPS_API_KEY` with the [Geocoding API](https://console.cloud.google.com) enabled, and a CSV export of schools (`Name, Location, Country, URL, Teachers, Grade Level, Actions`).
+
+### Local
+```bash
+export BACKEND_MAPS_API_KEY="your-key"
+bin/rails "db:staging_seed[/path/to/schools.csv,500]"
+```
+
+### Heroku
+`db:seed` is **not** run automatically (only `db:prepare` runs on deploy), so seed admins first:
+```bash
+heroku config:set BACKEND_MAPS_API_KEY=your-key --app your-app
+heroku run bin/rails db:seed --app your-app
+heroku run bash --app your-app
+```
+Inside the dyno, download the CSV. Any hosting works — Google Drive, Dropbox, S3, transfer.sh, or committed directly to the repo. Google Drive example (share as "Anyone with link", copy the file ID):
+```bash
+ID=YOUR_FILE_ID
+OUT=/tmp/schools.csv
+curl -L "https://drive.google.com/uc?export=download&id=$ID" -o $OUT
+bin/rails "db:staging_seed[/tmp/schools.csv,500]"
+```
+Revoke the Google Drive link after seeding.
+
+
 ## MailBluster Integration
 
 The app integrates with [MailBluster](https://mailbluster.com/) for email marketing and newsletter management.

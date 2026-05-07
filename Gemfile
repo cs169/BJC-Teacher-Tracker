@@ -17,6 +17,7 @@ gem "webpacker"
 
 # Reduces boot times through caching; required in config/boot.rb
 gem "bootsnap", ">= 1.4.4", require: false
+gem "faker"
 
 # Login via 3rd party services.
 gem "omniauth"
