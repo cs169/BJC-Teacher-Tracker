@@ -93,6 +93,12 @@ Rails.application.configure do
   # Set this to true and configure the email server for immediate delivery to raise delivery rors.
   config.action_mailer.raise_delivery_errors = true
   config.action_mailer.delivery_method = :smtp
+  config.action_mailer.default_url_options = {
+    host: ENV.fetch("APP_HOST", "teachers.bjc.berkeley.edu"),
+    protocol: ENV.fetch("APP_PROTOCOL", "https")
+  }
+  config.action_mailer.default_url_options[:port] = ENV["APP_PORT"].to_i if ENV["APP_PORT"].present?
+  Rails.application.routes.default_url_options = config.action_mailer.default_url_options
   config.action_mailer.smtp_settings = {
     address: ENV["SMTP_EMAIL_ADDRESS"],
     port: 587,

@@ -62,7 +62,7 @@ class TeacherMailer < ApplicationMailer
       denial_reason: @denial_reason,
       request_reason: @request_reason,
       request_info_reason: @request_reason,
-      view_teacher_url: teacher_show_url
+      view_teacher_url: teacher_url(@teacher)
     }
     base_rules.merge!(@teacher.email_attributes)
     base_rules.with_indifferent_access

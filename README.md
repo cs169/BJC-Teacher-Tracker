@@ -206,3 +206,6 @@ TODO: Link to download CodeClimate binaries for macOS.
 ```
 https://codeclimate.com/downloads/test-reporter/test-reporter-latest-darwin-amd64
 ```
+
+### Contributions
+[Hagen Haeussler](https://www.linkedin.com/in/hagen-h%C3%A4u%C3%9Fler-6bb293289/?lipi=urn%3Ali%3Apage%3Ad_flagship3_profile_view_base_contact_details%3BeCJ75lhZToWJMy945exu1g%3D%3D) 

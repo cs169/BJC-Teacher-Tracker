@@ -91,6 +91,12 @@ Rails.application.configure do
   # Email settings
   # Do not send emails in staging environment, and do not raise errors
   config.action_mailer.raise_delivery_errors = false
+  config.action_mailer.default_url_options = {
+    host: ENV.fetch("APP_HOST", "teachers.bjc.berkeley.edu"),
+    protocol: ENV.fetch("APP_PROTOCOL", "https")
+  }
+  config.action_mailer.default_url_options[:port] = ENV["APP_PORT"].to_i if ENV["APP_PORT"].present?
+  Rails.application.routes.default_url_options = config.action_mailer.default_url_options
 
   # Store files on Amazon S3. (Uncomment this when S3 is setup)
   # config.active_storage.service = :amazon
