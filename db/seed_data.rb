@@ -234,7 +234,7 @@ module SeedData
             # Include it in the seed data is to simulate the behavior of creating a new teacher,
             # because we need to use it to compared with the EmailAddress model,
             # to determine the existence of the teacher
-            email: "ball@berkeley.edu",
+            email: "mball@berkeley.edu",
         },
         {
             first_name: "Lauren",
@@ -419,7 +419,7 @@ module SeedData
   def self.email_addresses
     [
       {
-        email: "ball@berkeley.edu",
+        email: "mball@berkeley.edu",
         primary: true,
         teacher: Teacher.find_by(first_name: "Michael"),
       },
