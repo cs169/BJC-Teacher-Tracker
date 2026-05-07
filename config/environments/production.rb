@@ -92,6 +92,7 @@ Rails.application.configure do
   # Ignore bad email addresses and do not raise email delivery errors.
   # Set this to true and configure the email server for immediate delivery to raise delivery rors.
   config.action_mailer.raise_delivery_errors = true
+  config.action_mailer.perform_deliveries = ENV["SMTP_EMAIL_ADDRESS"].present?
   config.action_mailer.delivery_method = :smtp
   config.action_mailer.default_url_options = {
     host: ENV.fetch("APP_HOST", "teachers.bjc.berkeley.edu"),
