@@ -38,28 +38,7 @@ namespace :db do
 
     require "csv"
 
-    # ==========================================================
-    # SECTION 1 — TEACHER NAME POOLS
-    # 47 first names × 44 last names = 2,068 unique combinations
-    # ==========================================================
-
-    first_names = %w[
-      James Maria David Sarah Michael Jennifer Robert Lisa
-      William Patricia Richard Barbara Thomas Susan Charles
-      Jessica Daniel Karen Matthew Nancy Anthony Betty Mark
-      Dorothy Donald Linda Paul Sandra Kenneth Ashley George
-      Priya Wei Amara Fatima Rodrigo Yuki Tariq Aisha
-      Mei Kofi Elena Ravi Zara Ingrid Mateus Layla
-    ].freeze
-
-    last_names = %w[
-      Smith Johnson Williams Brown Jones Garcia Miller Davis
-      Rodriguez Martinez Hernandez Lopez Gonzalez Wilson
-      Anderson Thomas Taylor Moore Jackson White Harris Martin
-      Thompson Robinson Clark Walker Young Allen King Wright
-      Patel Nguyen Kim Chen Park Okonkwo Mueller Santos
-      Johansson Nakamura Osei Ferreira Kowalski Petrov
-    ].freeze
+    require "faker"
 
     # ==========================================================
     # SECTION 2 — PD EVENT NAMES
@@ -295,16 +274,16 @@ namespace :db do
       school_slug = school.name.downcase.gsub(/[^a-z0-9]+/, "").first(16)
 
       teachers_per_school.times do
-        first = first_names[teacher_index % first_names.size]
-        last  = last_names[(teacher_index / first_names.size) % last_names.size]
-        email = "#{first.downcase}.#{last.downcase}@#{school_slug}#{school.id}.edu"
+        first = Faker::Name.first_name
+        last  = Faker::Name.last_name
+        email = "#{first.downcase.gsub(/[^a-z]/, '')}.#{last.downcase.gsub(/[^a-z]/, '')}@#{school_slug}#{school.id}.edu"
 
         app_status = app_statuses[teacher_index % app_statuses.size]
 
         teacher = Teacher.create!(
           first_name:         first,
           last_name:          last,
-          snap:               "#{first.downcase}_#{last.downcase[0..3]}#{teacher_index}",
+          snap:               "#{first.downcase.gsub(/[^a-z]/, '')}_#{last.downcase.gsub(/[^a-z]/, '')[0..3]}#{teacher_index}",
           status:             statuses[teacher_index % statuses.size],
           application_status: app_status,
           education_level:    ed_level_for[school.grade_level.to_sym],

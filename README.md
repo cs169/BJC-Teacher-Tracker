@@ -161,7 +161,7 @@ If bundler install runs successfully, continue with the following commands to co
 
 ## Staging Data
 
-Populates a staging database with realistic sample data (~500 schools, ~700 teachers, PD events, and registrations). Run **after** `db:seed`. Never runs in production.
+Populates a staging database with realistic sample data (~500 schools, ~700 teachers, PD events, and registrations). Run **after** `db:seed`. Never runs in production. Note that rows with invalid/missing data will not be seeded.
 
 **Requires:** `BACKEND_MAPS_API_KEY` with the [Geocoding API](https://console.cloud.google.com) enabled, and a CSV export of schools (`Name, Location, Country, URL, Teachers, Grade Level, Actions`).
 
@@ -178,6 +178,7 @@ heroku config:set BACKEND_MAPS_API_KEY=your-key --app your-app
 heroku run bin/rails db:seed --app your-app
 heroku run bash --app your-app
 ```
+<<<<<<< HEAD
 Inside the dyno, download the CSV then run the seed:
 ```bash
 TOKEN=$(curl -sc /tmp/gc "https://drive.google.com/uc?export=download&id=FILE_ID" \
@@ -188,6 +189,16 @@ bin/rails "db:staging_seed[/tmp/schools.csv,500]"
 ```
 
 The CSV can be hosted anywhere accessible from the dyno — Google Drive, Dropbox, S3, transfer.sh, a private GitHub raw URL, or committed directly to the repo if the data is not sensitive.
+=======
+Inside the dyno, download the CSV. Any hosting works — Google Drive, Dropbox, S3, transfer.sh, or committed directly to the repo. Google Drive example (share as "Anyone with link", copy the file ID):
+```bash
+ID=YOUR_FILE_ID
+OUT=/tmp/schools.csv
+curl -L "https://drive.google.com/uc?export=download&id=$ID" -o $OUT
+bin/rails "db:staging_seed[/tmp/schools.csv,500]"
+```
+Revoke the Google Drive link after seeding.
+>>>>>>> seeding-script
 
 
 ## MailBluster Integration
