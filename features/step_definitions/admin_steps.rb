@@ -9,6 +9,19 @@ LOGIN_SERVICE = {
   Clever: :clever
 }.with_indifferent_access
 
+# Under Puma/Selenium the mail is delivered on the app's request thread, and
+# ActionMailer::Base.deliveries can lag the browser-visible redirect by a few
+# hundred milliseconds. Poll for at least `min_count` deliveries so assertions
+# don't race the mailer.
+def wait_for_email(min_count: 1, timeout: Capybara.default_max_wait_time)
+  Timeout.timeout(timeout) do
+    sleep 0.05 until ActionMailer::Base.deliveries.length >= min_count
+  end
+  ActionMailer::Base.deliveries.last
+rescue Timeout::Error
+  raise "Expected >= #{min_count} email(s) in ActionMailer::Base.deliveries, got #{ActionMailer::Base.deliveries.length}"
+end
+
 # Returns a OAuth2 token associated with email "testadminuser@berkeley.edu"
 Given(/I have an admin email/) do
   OmniAuth.config.mock_auth[:google_oauth2] = OmniAuth::AuthHash.new({
@@ -54,21 +67,21 @@ Then(/I cannot log in with Google/) do
 end
 
 Then(/I send a welcome email/) do
-  last_email = ActionMailer::Base.deliveries.last
+  last_email = wait_for_email
   last_email.to[0].should eq "testteacher@berkeley.edu"
   last_email.subject.should eq "Welcome to The Beauty and Joy of Computing!"
   last_email.body.encoded.should include "Thanks for teaching with BJC!"
 end
 
 Then(/I send a deny email/) do
-  last_email = ActionMailer::Base.deliveries.last
+  last_email = wait_for_email
   last_email.to[0].should eq "testteacher@berkeley.edu"
   last_email.subject.should eq "Deny Email"
   last_email.body.encoded.should include "sorry to inform you that your application has been rejected"
 end
 
 Then(/I send a request info email$/) do
-  last_email = ActionMailer::Base.deliveries.last
+  last_email = wait_for_email
   last_email.to[0].should eq "testteacher@berkeley.edu"
   last_email.subject.should eq "Request Info Email"
   last_email.body.encoded.should include "We kindly ask you to provide the following details to complete your application:"
@@ -77,6 +90,7 @@ end
 Then(/I send a form submission email to both admin and teacher with email "(.*)"/) do |teacher_email|
   # this step definition assumes that the admin form submission email gets
   # sent first, as this is how it is implemented in the code
+  wait_for_email(min_count: 2)
   admin_fs_email = ActionMailer::Base.deliveries[-2]
   teacher_fs_email = ActionMailer::Base.deliveries.last
 
@@ -101,7 +115,7 @@ Then(/I attach the csv "([^"]*)"$/) do |path|
 end
 
 Then(/I send a request info email with content "(.*)"/) do |content|
-  last_email = ActionMailer::Base.deliveries.last
+  last_email = wait_for_email
   last_email.to[0].should eq "testteacher@berkeley.edu"
   last_email.subject.should eq "Request Info Email"
   last_email.body.encoded.should include "We kindly ask you to provide the following details to complete your application:"

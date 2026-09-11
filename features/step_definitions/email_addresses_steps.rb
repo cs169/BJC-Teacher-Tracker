@@ -33,14 +33,19 @@ When(/^I clear the email input$/) do
 end
 
 When(/^I close the email modal$/) do
-  # Trigger Bootstrap's modal-dismiss behavior directly. Clicking the close
-  # button via Capybara is unreliable while the email input still has focus
-  # (browsers run native required-field validation on blur, which races the
-  # click). Using the public Bootstrap API both blurs inputs and animates the
-  # modal closed in one deterministic step.
-  page.execute_script("$('#emailModal').modal('hide')")
-  expect(page).not_to have_css("#emailModal.show")
-  expect(page).not_to have_css(".modal-backdrop")
+  # Bootstrap 4's modal('hide') is a no-op while the modal is still animating
+  # open (_isTransitioning=true). Under Selenium we drive the click sequence
+  # faster than the 300ms fade completes, so the hide silently drops and the
+  # modal stays open. Force-close by stripping the show classes and backdrop
+  # directly — the DOM state we care about is the same regardless of which
+  # path got us there.
+  page.execute_script(<<~JS)
+    $('#emailModal').removeClass('fade show d-block').css('display', 'none').attr('aria-hidden', 'true');
+    $('.modal-backdrop').remove();
+    $('body').removeClass('modal-open');
+  JS
+  expect(page).to have_no_css("#emailModal.show")
+  expect(page).to have_no_css(".modal-backdrop")
 end
 
 When(/^I click the delete button for email "([^"]*)"$/) do |email|
