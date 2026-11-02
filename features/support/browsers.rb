@@ -50,8 +50,10 @@ Capybara.register_driver :chrome do |app|
 end
 
 Capybara.register_driver :headless_chrome do |app|
-  chrome_options.add_argument("--headless")
+  chrome_options.add_argument("--headless=new")
   chrome_options.add_argument("--disable-gpu")
+  chrome_options.add_argument("--no-sandbox")
+  chrome_options.add_argument("--disable-dev-shm-usage")
   chrome_options.add_argument("--window-size=1440,900")
 
   driver = Capybara::Selenium::Driver.new(app, browser: :chrome, options: chrome_options)
@@ -96,4 +98,9 @@ Capybara.register_driver :headless_firefox do |app|
 end
 
 Capybara.default_driver = select_capybara_driver
+# Headless Chrome on CI is consistently slower than the 2s default. Bumping
+# this to 10s prevents Selenium-driven assertions and finders from racing
+# JavaScript that initializes asynchronously (DataTables, TinyMCE, Selectize,
+# Bootstrap modals, OmniAuth-mocked redirects).
+Capybara.default_max_wait_time = 10
 puts "\nRUNNING CAPYBARA WITH DRIVER #{Capybara.default_driver}\n\n"
