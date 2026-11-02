@@ -105,7 +105,10 @@
                 position: school.position,
                 map: map
             });
-            let infoWindow = new google.maps.InfoWindow({ content: school.name });
+            // InfoWindow parses string content as HTML; pass a text node instead.
+            let content = document.createElement('div');
+            content.textContent = school.name;
+            let infoWindow = new google.maps.InfoWindow({ content: content });
             marker.addListener('click', () => { infoWindow.open(map, marker) });
         }
     }
