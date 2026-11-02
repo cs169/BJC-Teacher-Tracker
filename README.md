@@ -159,9 +159,14 @@ If bundler install runs successfully, continue with the following commands to co
 - `heroku config:set ...` for each of the environment variables.
 - `heroku open`
 
+## Seed Data
+
+- `bin/rails db:seed` loads only production-safe data: email templates, UC Berkeley, and the core admin accounts. It is safe to run on production, and is how email template changes get there.
+- `bin/rails db:seed:sample_data` runs `db:seed`, then adds a dozen demo schools and teachers for local development. All addresses use reserved `.example` domains. It refuses to run in production unless `ALLOW_SAMPLE_DATA=true` is set.
+
 ## Staging Data
 
-Populates a staging database with realistic sample data (~500 schools, ~700 teachers, PD events, and registrations). Run **after** `db:seed`. Never runs in production. Note that rows with invalid/missing data will not be seeded.
+Populates a staging database with realistic sample data (~500 schools, ~700 teachers, PD events, and registrations). Run **after** `db:seed`. Refuses to run in production unless `ALLOW_SAMPLE_DATA=true` is set, which should only ever be set on a staging app. Note that rows with invalid/missing data will not be seeded.
 
 **Requires:** `BACKEND_MAPS_API_KEY` with the [Geocoding API](https://console.cloud.google.com) enabled, and a CSV export of schools (`Name, Location, Country, URL, Teachers, Grade Level, Actions`).
 

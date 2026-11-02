@@ -33,6 +33,7 @@ namespace :db do
     csv_path = args[:csv_path].presence
     limit    = args[:limit].to_i.positive? ? args[:limit].to_i : nil
 
+    SampleDataGuard.check!("db:staging_seed")
     abort "ERROR: csv_path is required. Usage: bin/rails \"db:staging_seed[/path/to/schools.csv]\"" if csv_path.blank?
     abort "ERROR: BACKEND_MAPS_API_KEY is not set. Schools won't appear on the map without it." unless ENV["BACKEND_MAPS_API_KEY"].present?
 
