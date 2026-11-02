@@ -8,7 +8,7 @@ RSpec.describe SnsSubscriptionConfirmer, type: :service do
 
   describe ".confirm!" do
     it "GETs the SubscribeURL for a valid AWS SNS host" do
-      expect(HTTParty).to receive(:get).with(valid_url).and_return(success_response)
+      expect(HTTParty).to receive(:get).with(valid_url, timeout: 10).and_return(success_response)
       described_class.confirm!(valid_url)
     end
 
@@ -19,7 +19,7 @@ RSpec.describe SnsSubscriptionConfirmer, type: :service do
         "https://sns.ap-southeast-1.amazonaws.com/?Token=x"
       ]
       urls.each do |url|
-        expect(HTTParty).to receive(:get).with(url).and_return(success_response)
+        expect(HTTParty).to receive(:get).with(url, timeout: 10).and_return(success_response)
         described_class.confirm!(url)
       end
     end
@@ -49,6 +49,14 @@ RSpec.describe SnsSubscriptionConfirmer, type: :service do
       expect {
         described_class.confirm!(valid_url)
       }.to raise_error(SnsSubscriptionConfirmer::ConfirmationError, /403/)
+    end
+
+    it "raises NetworkError (a ConfirmationError) when AWS can't be reached" do
+      allow(HTTParty).to receive(:get).and_raise(Net::OpenTimeout, "execution expired")
+
+      expect {
+        described_class.confirm!(valid_url)
+      }.to raise_error(SnsSubscriptionConfirmer::NetworkError, /OpenTimeout/)
     end
   end
 end

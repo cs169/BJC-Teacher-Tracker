@@ -4,9 +4,30 @@ require "aws-sdk-sns"
 
 class SnsMessageVerifier
   class VerificationError < StandardError; end
+  # The body is not a JSON object at all. Raised before any signature check, so
+  # the controller can answer 400 instead of 401.
+  class MalformedEnvelopeError < VerificationError; end
+
+  AWS_VERIFIER_LOCK = Mutex.new
+  private_constant :AWS_VERIFIER_LOCK
 
   def self.verify!(raw_body)
     new(raw_body).verify!
+  end
+
+  # One shared SDK verifier for the whole process. The SDK caches downloaded
+  # signing certificates by SigningCertURL on the instance, so reusing it means
+  # we only fetch each AWS cert once (lazily, on the first message that uses it)
+  # instead of on every request.
+  def self.aws_verifier
+    AWS_VERIFIER_LOCK.synchronize do
+      @aws_verifier ||= Aws::SNS::MessageVerifier.new
+    end
+  end
+
+  # Test helper: drop the memoized verifier (and its cert cache).
+  def self.reset_aws_verifier!
+    AWS_VERIFIER_LOCK.synchronize { @aws_verifier = nil }
   end
 
   def initialize(raw_body)
@@ -24,9 +45,11 @@ class SnsMessageVerifier
   attr_reader :raw_body
 
   def parse_envelope
-    JSON.parse(raw_body)
+    envelope = JSON.parse(raw_body.to_s)
+    raise MalformedEnvelopeError, "Envelope must be a JSON object, got #{envelope.class}" unless envelope.is_a?(Hash)
+    envelope
   rescue JSON::ParserError => e
-    raise VerificationError, "Invalid JSON: #{e.message}"
+    raise MalformedEnvelopeError, "Invalid JSON: #{e.message}"
   end
 
   def assert_topic_allowed!(topic_arn)
@@ -35,9 +58,13 @@ class SnsMessageVerifier
   end
 
   def assert_signature_valid!(envelope)
-    Aws::SNS::MessageVerifier.new.authenticate!(envelope.to_json)
+    self.class.aws_verifier.authenticate!(envelope.to_json)
   rescue Aws::SNS::MessageVerifier::VerificationError => e
     raise VerificationError, "Signature verification failed: #{e.message}"
+  rescue StandardError => e
+    # Missing/garbled fields (e.g. no SigningCertURL, non-string Signature) make
+    # the SDK raise URI/Type/OpenSSL errors. Any of those means "not verified".
+    raise VerificationError, "Signature verification failed (#{e.class}): #{e.message}"
   end
 
   def allowed_topic_arns

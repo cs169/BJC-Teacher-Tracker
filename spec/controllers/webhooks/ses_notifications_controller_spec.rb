@@ -26,7 +26,11 @@ RSpec.describe Webhooks::SesNotificationsController, type: :request do
   end
 
   def post_envelope(envelope)
-    post ses_webhook_path, params: envelope.to_json, headers: { "Content-Type" => "application/json" }
+    post_raw(envelope.to_json)
+  end
+
+  def post_raw(body)
+    post ses_webhook_path, params: body, headers: { "Content-Type" => "application/json" }
   end
 
   before do
@@ -176,6 +180,85 @@ RSpec.describe Webhooks::SesNotificationsController, type: :request do
         }.to change(SesDeliveryEvent, :count).by(1)
         expect(response).to have_http_status(:no_content)
         expect(SesDeliveryEvent.last.email_address_id).to be_nil
+      end
+    end
+
+    context "with a notificationType (identity feedback) Bounce" do
+      it "increments hard_bounce_count and sets bounced" do
+        message = ses_fixture("hard_bounce").except("eventType").merge("notificationType" => "Bounce")
+        envelope = notification_envelope("hard_bounce").merge("Message" => message.to_json)
+
+        post_envelope(envelope)
+        expect(response).to have_http_status(:no_content)
+        expect(email.reload.hard_bounce_count).to eq(1)
+        expect(email.bounced?).to be true
+      end
+    end
+
+    context "when the verified inner Message is not a JSON object" do
+      ["[1, 2]", "42", "\"hello\""].each do |message|
+        it "ignores #{message} with 204 and changes nothing" do
+          envelope = notification_envelope("delivery").merge("Message" => message)
+          expect(SesEventProcessor).not_to receive(:new)
+
+          expect { post_envelope(envelope) }.not_to change(SesDeliveryEvent, :count)
+          expect(response).to have_http_status(:no_content)
+        end
+      end
+
+      it "ignores a missing Message with 204" do
+        post_envelope(notification_envelope("delivery").except("Message"))
+        expect(response).to have_http_status(:no_content)
+      end
+    end
+
+    context "when the inner SES event has the wrong shape" do
+      it "returns 400 instead of raising" do
+        message = { "eventType" => "Bounce", "bounce" => "oops" }
+        post_envelope(notification_envelope("delivery").merge("Message" => message.to_json))
+        expect(response).to have_http_status(:bad_request)
+      end
+    end
+
+    context "when confirming a subscription can't reach AWS" do
+      it "returns 503 so SNS retries" do
+        allow(SnsSubscriptionConfirmer).to receive(:confirm!)
+          .and_raise(SnsSubscriptionConfirmer::NetworkError, "Net::OpenTimeout")
+        post_envelope("Type" => "SubscriptionConfirmation", "TopicArn" => topic_arn,
+                      "SubscribeURL" => "https://sns.us-west-2.amazonaws.com/?Token=x")
+        expect(response).to have_http_status(:service_unavailable)
+      end
+    end
+
+    context "with the real verifier (bad input from unauthenticated callers)" do
+      before do
+        SnsMessageVerifier.reset_aws_verifier!
+        allow(SnsMessageVerifier).to receive(:verify!).and_call_original
+        allow(ENV).to receive(:[]).and_call_original
+        allow(ENV).to receive(:[]).with("SNS_ALLOWED_TOPIC_ARNS").and_return(topic_arn)
+      end
+
+      ["[]", "1", "null", "not json", ""].each do |body|
+        it "returns 400 for body #{body.inspect}" do
+          post_raw(body)
+          expect(response).to have_http_status(:bad_request)
+        end
+      end
+
+      it "returns 401 (not 500) for an allowlisted topic with no SigningCertURL" do
+        post_envelope(notification_envelope("delivery").except("SigningCertURL"))
+        expect(response).to have_http_status(:unauthorized)
+      end
+
+      it "returns 401 for a non-allowlisted topic" do
+        post_envelope(notification_envelope("delivery").merge("TopicArn" => "arn:aws:sns:us-west-2:1:evil"))
+        expect(response).to have_http_status(:unauthorized)
+      end
+
+      it "returns 413 for a body over 256 KB without verifying it" do
+        expect(SnsMessageVerifier).not_to receive(:verify!)
+        post_raw({ "Message" => "x" * (256.kilobytes + 1) }.to_json)
+        expect(response).to have_http_status(:payload_too_large)
       end
     end
   end

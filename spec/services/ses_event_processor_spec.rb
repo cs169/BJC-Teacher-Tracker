@@ -147,5 +147,80 @@ RSpec.describe SesEventProcessor, type: :service do
           .not_to change(SesDeliveryEvent, :count)
       end
     end
+
+    context "identity feedback notifications (notificationType instead of eventType)" do
+      def as_feedback(name)
+        event = load_event(name)
+        event.merge("notificationType" => event.delete("eventType"))
+      end
+
+      def process_feedback(name)
+        described_class.new(as_feedback(name), sns_message_id: "sns-fb-#{SecureRandom.hex(4)}").call
+      end
+
+      it "counts a Delivery" do
+        expect { process_feedback("delivery") }.to change { email.reload.emails_delivered }.by(1)
+      end
+
+      it "counts a permanent Bounce and sets bounced" do
+        process_feedback("hard_bounce")
+        expect(email.reload.hard_bounce_count).to eq(1)
+        expect(email.bounced?).to be true
+      end
+
+      it "counts a Complaint" do
+        expect { process_feedback("complaint") }.to change { email.reload.hard_bounce_count }.by(1)
+      end
+
+      it "stores the event type on the event row" do
+        process_feedback("soft_bounce")
+        expect(SesDeliveryEvent.last.event_type).to eq("Bounce")
+      end
+
+      it "ignores the AmazonSnsSubscriptionSucceeded notice" do
+        event = { "notificationType" => "AmazonSnsSubscriptionSucceeded", "message" => "ok" }
+        expect { described_class.new(event, sns_message_id: "sns-ok").call }
+          .not_to change(SesDeliveryEvent, :count)
+      end
+    end
+
+    context "counter updates" do
+      it "increments in SQL, so a stale in-memory record can't drop an increment" do
+        stale = EmailAddress.find(email.id)
+        EmailAddress.where(id: email.id).update_all(emails_delivered: 5)
+        allow(EmailAddress).to receive(:find_by).and_return(stale)
+
+        process("delivery")
+        expect(email.reload.emails_delivered).to eq(6)
+      end
+
+      it "rolls back the event row if the counter update fails" do
+        relation = instance_double(ActiveRecord::Relation)
+        allow(EmailAddress).to receive(:where).and_return(relation)
+        allow(relation).to receive(:update_all).and_raise(ActiveRecord::StatementInvalid, "boom")
+
+        expect { process("delivery") }.to raise_error(ActiveRecord::StatementInvalid)
+        expect(SesDeliveryEvent.count).to eq(0)
+      end
+    end
+
+    context "malformed SES events" do
+      it "raises ProcessingError for a non-Hash event" do
+        expect { described_class.new([1], sns_message_id: "x").call }
+          .to raise_error(SesEventProcessor::ProcessingError)
+      end
+
+      it "raises ProcessingError when a nested field has the wrong type" do
+        event = { "eventType" => "Bounce", "bounce" => "oops" }
+        expect { described_class.new(event, sns_message_id: "x").call }
+          .to raise_error(SesEventProcessor::ProcessingError)
+      end
+
+      it "skips non-object recipient entries" do
+        event = load_event("hard_bounce")
+        event["bounce"]["bouncedRecipients"] = ["validated@teacher.edu", { "emailAddress" => "validated@teacher.edu" }]
+        expect { described_class.new(event, sns_message_id: "x").call }.to change(SesDeliveryEvent, :count).by(1)
+      end
+    end
   end
 end

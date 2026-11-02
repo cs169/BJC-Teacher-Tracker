@@ -1,9 +1,18 @@
 # frozen_string_literal: true
 
 require "uri"
+require "net/http"
 
 class SnsSubscriptionConfirmer
   class ConfirmationError < StandardError; end
+  # Couldn't reach AWS (timeout, DNS, TLS, connection reset). Worth retrying.
+  class NetworkError < ConfirmationError; end
+
+  TIMEOUT_SECONDS = 10
+  NETWORK_ERRORS = [
+    Timeout::Error, SocketError, SystemCallError, OpenSSL::SSL::SSLError,
+    Net::OpenTimeout, Net::ReadTimeout, EOFError, IOError
+  ].freeze
 
   ALLOWED_HOST_REGEX = /\Asns\.[a-z0-9-]+\.amazonaws\.com\z/
 
@@ -18,7 +27,12 @@ class SnsSubscriptionConfirmer
   def confirm!
     assert_url_safe!
 
-    response = HTTParty.get(@subscribe_url)
+    response =
+      begin
+        HTTParty.get(@subscribe_url, timeout: TIMEOUT_SECONDS)
+      rescue *NETWORK_ERRORS => e
+        raise NetworkError, "#{e.class}: #{e.message}"
+      end
     unless response.success?
       raise ConfirmationError, "AWS SNS returned #{response.code} when confirming subscription"
     end
