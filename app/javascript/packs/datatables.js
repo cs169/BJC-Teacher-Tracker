@@ -17,7 +17,10 @@ function countHiddenResults(table, statusColIdx, searchQuery, statusValue) {
 }
 
 function updateHiddenResultsNotice(table, statusColIdx) {
-  const searchQuery = table.search().trim();
+  // Only the admin teachers table has a hidden-results notice. On pages without
+  // one, `table` is an empty API and `search()` returns undefined.
+  if (!table || !table.context.length) return;
+  const searchQuery = (table.search() || '').trim();
   const $notice = $('#hidden-filter-notice');
   const $allBoxes = $('input:checkbox[name="statusFilter"]');
   const checkedCount = $allBoxes.filter(':checked').length;
@@ -73,11 +76,13 @@ $(function() {
 
   $tables.draw();
 
-  const statusColIdx = $('td[data-col="status"]').first().index();
-  const $noticeEl = $('<div id="hidden-filter-notice" class="small text-muted w-100"></div>');
-  $($tables.table().container()).find('.dataTables_info').closest('.col-6').append($noticeEl);
-
-  const $teachersTable = $('.js-teachersTable').DataTable();
+  const $teachersTableEl = $('.js-teachersTable');
+  const $teachersTable = $teachersTableEl.length ? $teachersTableEl.DataTable() : null;
+  const statusColIdx = $teachersTableEl.find('td[data-col="status"]').first().index();
+  if ($teachersTable) {
+    const $noticeEl = $('<div id="hidden-filter-notice" class="small text-muted w-100"></div>');
+    $($teachersTable.table().container()).find('.dataTables_info').closest('.col-6').append($noticeEl);
+  }
 
   $(".custom-checkbox").on("change", () => {
       $tables.draw();
