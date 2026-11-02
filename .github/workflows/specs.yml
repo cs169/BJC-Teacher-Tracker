@@ -1,6 +1,10 @@
 name: All Specs
 
-on: [push, pull_request, workflow_dispatch]
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
 
 jobs:
   specs:
@@ -32,7 +36,7 @@ jobs:
       - name: Use Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: 3.2.3
+          ruby-version: 3.3.9
           bundler-cache: true
           
       - run: bin/yarn

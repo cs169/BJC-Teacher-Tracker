@@ -20,10 +20,16 @@ When("I check {string} checkbox") do |checkbox|
 end
 
 When(/^(?:|I )fill in the page HTML content with "([^"]*)"$/) do |value|
-  page.execute_script('$(tinyMCE.editors[0].setContent("' + value + '"))')
+  Timeout.timeout(Capybara.default_max_wait_time) do
+    sleep 0.05 until page.evaluate_script("typeof tinyMCE !== 'undefined' && tinyMCE.editors && tinyMCE.editors.length > 0")
+  end
+  page.execute_script("tinyMCE.editors[0].setContent(#{value.to_json})")
 end
 
 And(/^(?:|I )should see the page HTML content containing "([^"]*)"$/) do |value|
+  Timeout.timeout(Capybara.default_max_wait_time) do
+    sleep 0.05 until page.evaluate_script("typeof tinyMCE !== 'undefined' && tinyMCE.editors && tinyMCE.editors.length > 0")
+  end
   expect(page.execute_script("return tinyMCE.editors[0].getContent()")).to include(value)
 end
 
