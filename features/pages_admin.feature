@@ -237,6 +237,7 @@ Scenario: Attempting to update page with taken slug doesn't delete form input
     And I choose "inlineRadioAdmin"
     And I fill in the page HTML content with "This is a test"
     And I press "Submit"
+    And I wait for TinyMCE to load
     Given I am on the new pages page
     And I fill in "page_title" with "Test Title 2"
     And I fill in "page_url_slug" with "basic_slug_2"
