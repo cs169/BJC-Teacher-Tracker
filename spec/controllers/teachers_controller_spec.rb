@@ -10,6 +10,36 @@ RSpec.describe TeachersController, type: :controller do
     ApplicationController.any_instance.stub(:require_login).and_return(true)
   end
 
+  it "preserves the selected grade level and school type when signup creates a school" do
+    ApplicationController.any_instance.stub(:is_admin?).and_return(false)
+    # The school form submits enum key strings (School.grade_level_options);
+    # these used to be coerced with to_i, turning every choice into 0
+    # (elementary / public).
+    post :create, params: { teacher: { first_name: "Grade", last_name: "Probe", status: 0,
+                                       personal_website: "https://example.com" },
+                            school: { name: "Grade Level High", city: "Fresno", state: "CA", country: "US",
+                                      website: "glh.example.com", grade_level: "high_school", school_type: "private" },
+                            email: { primary: "gradeprobe@example.com" }
+    }
+    school = School.find_by(name: "Grade Level High")
+    expect(school).not_to be_nil
+    expect(school.grade_level).to eq "high_school"
+    expect(school.school_type).to eq "private"
+  end
+
+  it "leaves education_level unset when the signup form submits a blank value" do
+    ApplicationController.any_instance.stub(:is_admin?).and_return(false)
+    short_app = Teacher.find_by(first_name: "Short")
+    # A blank education_level used to be coerced to 0 (middle_school).
+    post :create, params: { teacher: { first_name: "Edu", last_name: "Blank", status: 0, education_level: "",
+                                       personal_website: "https://example.com", school_id: short_app.school_id },
+                            email: { primary: "edublank@example.com" }
+    }
+    user = Teacher.find_by(first_name: "Edu")
+    expect(user).not_to be_nil
+    expect(user.education_level).to be_nil
+  end
+
   it "should initialize session count to 1 when teachers signs up (submits app)" do
     ApplicationController.any_instance.stub(:is_admin?).and_return(false)
     short_app = Teacher.find_by(first_name: "Short")
@@ -130,6 +160,89 @@ RSpec.describe TeachersController, type: :controller do
     short_app = Teacher.find_by(first_name: "Short")
     expect(short_app.snap).to eq "foobar"
     expect(short_app.ip_history.count()).to eq ip_count
+  end
+
+  it "re-renders signup with an error when no email is submitted" do
+    ApplicationController.any_instance.stub(:is_admin?).and_return(false)
+    short_app = Teacher.find_by(first_name: "Short")
+    expect {
+      post :create, params: { teacher: { first_name: "NoEmail", last_name: "User", status: 0,
+                                         personal_website: "https://example.com",
+                                         school_id: short_app.school_id } }
+    }.not_to change { Teacher.count }
+    expect(flash[:alert]).to match(/An error occurred/)
+  end
+
+  it "attaches more_files uploads to the files collection only" do
+    ApplicationController.any_instance.stub(:is_admin?).and_return(false)
+    ApplicationController.any_instance.stub(:current_user).and_return(Teacher.find_by(first_name: "Short"))
+    short_app = Teacher.find_by(first_name: "Short")
+    post :update, params: {
+      id: short_app.id,
+      teacher: {
+        school_id: short_app.school_id,
+        more_files: [fixture_file_upload(Rails.root.join("spec/fixtures/test_file.txt"), "text/plain")]
+      }
+    }
+    short_app.reload
+    expect(short_app.files.count).to eq(1)
+    expect(short_app.more_files.count).to eq(0)
+  end
+
+  it "still attaches supporting files submitted with a new signup" do
+    ApplicationController.any_instance.stub(:is_admin?).and_return(false)
+    short_app = Teacher.find_by(first_name: "Short")
+    post :create, params: {
+      teacher: { first_name: "File", last_name: "Signup", status: 0,
+                 personal_website: "https://example.com", school_id: short_app.school_id,
+                 files: [fixture_file_upload(Rails.root.join("spec/fixtures/test_file.txt"), "text/plain")] },
+      email: { primary: "filesignup@example.com" }
+    }
+    user = Teacher.find_by(first_name: "File")
+    expect(user).not_to be_nil
+    expect(user.files.count).to eq(1)
+  end
+
+  it "ignores teacher[files] on update so attachments cannot be replaced by mass assignment" do
+    ApplicationController.any_instance.stub(:is_admin?).and_return(false)
+    ApplicationController.any_instance.stub(:current_user).and_return(Teacher.find_by(first_name: "Short"))
+    short_app = Teacher.find_by(first_name: "Short")
+    short_app.files.attach(fixture_file_upload(Rails.root.join("spec/fixtures/test_file.txt"), "text/plain"))
+
+    post :update, params: {
+      id: short_app.id,
+      teacher: {
+        school_id: short_app.school_id,
+        files: [fixture_file_upload(Rails.root.join("spec/fixtures/test_file2.txt"), "text/plain")]
+      }
+    }
+    short_app.reload
+    expect(short_app.files.count).to eq(1)
+    expect(short_app.files.first.blob.filename.to_s).to eq("test_file.txt")
+  end
+
+  it "ignores non-attribute keys mistakenly nested under :teacher instead of raising" do
+    ApplicationController.any_instance.stub(:is_admin?).and_return(true)
+    ApplicationController.any_instance.stub(:current_user).and_return(Teacher.find_by(first_name: "Short"))
+    short_app = Teacher.find_by(first_name: "Short")
+
+    # request_reason/skip_email are top-level params and :school is an
+    # association, not a mass-assignable attribute. Permitting them made
+    # assign_attributes raise; strong params should now drop them silently.
+    post :update, params: {
+      id: short_app.id,
+      teacher: {
+        id: short_app.id,
+        more_info: "still works",
+        school_id: short_app.school_id,
+        school: "not-an-association",
+        request_reason: "should be ignored",
+        skip_email: "No"
+      }
+    }
+    short_app = Teacher.find_by(first_name: "Short")
+    expect(short_app.more_info).to eq "still works"
+    expect(short_app.school_id).to eq short_app.school_id
   end
 
   it "allows a teacher to update verification_notes on their own profile" do

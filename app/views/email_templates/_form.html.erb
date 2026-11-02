@@ -1,7 +1,8 @@
 <%= form_with(model: email_template, local: true) do |form| %>
   <div class="form">
     <label for="email_template_title"><h3>Title</h3></label>
-    <%= form.text_field :title, class: "form-control", readonly: email_template.required? %>
+    <%# Titles are the mailer lookup key and cannot be changed after creation. %>
+    <%= form.text_field :title, class: "form-control", readonly: email_template.persisted? || email_template.required? %>
     <label for="email_template_to"><h3>To</h3></label>
     <%= form.text_field :to, class: "form-control" %>
     <label for="email_template_subject"><h3>Subject</h3></label>

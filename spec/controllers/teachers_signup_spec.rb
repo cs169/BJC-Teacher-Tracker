@@ -54,8 +54,8 @@ RSpec.describe TeachersController, type: :controller do
         city: "Berkeley",
         state: "CA",
         website: "valid_example.com",
-        school_type: "Public",
-        grade_level: "High School"
+        school_type: "public",
+        grade_level: "high_school"
       },
       teacher: {
         first_name: "valid_example",
@@ -70,6 +70,9 @@ RSpec.describe TeachersController, type: :controller do
     }
     expect(Teacher.count).to eq(previous_count + 1)
     assert_match(/Thanks for signing up for BJC/, flash[:success])
+    school = School.find_by(name: "valid_example")
+    expect(school.grade_level).to eq("high_school")
+    expect(school.school_type).to eq("public")
   end
 
   it "redirects existing users to the login page" do

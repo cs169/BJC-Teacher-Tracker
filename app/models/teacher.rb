@@ -177,6 +177,15 @@ class Teacher < ApplicationRecord
     super(value)
   end
 
+  # education_level_options renders the enum's integer values, so the form
+  # submits them as strings (e.g. "1"). Rails enums accept integers or key
+  # names but not integer-strings, so bridge only the numeric case; anything
+  # else falls through to the enum for native key handling / validation.
+  def education_level=(value)
+    value = value.to_i if value.is_a?(String) && value.match?(/\A-?\d+\z/)
+    super(value)
+  end
+
   def text_status
     STATUSES[status_before_type_cast]
   end
@@ -212,10 +221,19 @@ class Teacher < ApplicationRecord
   end
 
   def valid_languages
-    !languages.empty? && languages.all? { |value| WORLD_LANGUAGES.include?(value) }
+    if languages.blank?
+      errors.add(:languages, "must include at least one language")
+      return
+    end
+
+    unrecognized = languages.reject { |value| WORLD_LANGUAGES.include?(value) }
+    if unrecognized.any?
+      errors.add(:languages, "contains unrecognized languages: #{unrecognized.join(', ')}")
+    end
   end
 
   def sort_and_clean_languages
+    return if languages.nil?
     # Due to an identified bug in the Selectize plugin, an empty string is occasionally appended to the 'languages' list.
     # To ensure data integrity, the following code removes any occurrences of empty strings from the list.
     languages.sort!.reject!(&:blank?)

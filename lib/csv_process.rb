@@ -6,13 +6,14 @@ module CsvProcess
     # For each entry in the csv:
     #   If invalid :school_id => create/update fails.
     #   If no :school_id => create the school data from hash if no school w/ same name exists
-    #   If no :email => fails to create/update teacher, no school is created
+    #   If no :email and no existing teacher matched by :snap => the row fails
     #
     # Params:
     #   teacher_hash_array: Array of hash elements where each hash represents a row in the csv.
     #     Each hash contains the following keys: :first_name, :last_name, :education_level, :email,
     #       :more_info, :personal_website, :snap, :status, :school_id, :school_name, :school_city,
-    #       :school_state, :school_website, :school_grade_level, :school_type, :school_tags, :school_nces_id
+    #       :school_state, :school_country, :school_website, :school_grade_level, :school_type,
+    #       :school_tags, :school_nces_id
     #
     # Returns:
     #   csv_import_summary_hash: A hash {
@@ -29,7 +30,6 @@ module CsvProcess
         school = School.find_by(name: row[:school_name])
         if !school # Prevent creating the same school multiple times if same csv uploaded again
           school = School.new(school_params_from_row(row))
-          school.assign_attributes({ teachers_count: 1 })
           if school.save
             row[:school_id] = school.id
             csv_import_summary_hash[:school_count] += 1
@@ -45,14 +45,15 @@ module CsvProcess
         next # don't try to create teacher
       end
 
-      teacher = Teacher.find_by(email: row[:email]) || Teacher.find_by(snap: row[:snap])
+      teacher = find_teacher_from_row(row)
       if teacher
         teacher.assign_attributes(teacher_update_params_from_row(row))
-      elsif row[:email]
+      elsif row[:email].present?
         teacher = Teacher.new(teacher_new_params_from_row(row))
+        teacher.email_addresses.build(email: row[:email], primary: true)
       end
 
-      if teacher.save
+      if teacher&.save
         csv_import_summary_hash[:success_count] += 1
       else
         csv_import_summary_hash[:fail_count] += 1
@@ -90,6 +91,19 @@ module CsvProcess
   end
 
   private
+  # Blank values must never be used for lookups: find_by(email: nil) or
+  # find_by(snap: nil) matches the first teacher missing that value, so a
+  # sparse CSV row would silently overwrite an unrelated record.
+  def find_teacher_from_row(row)
+    teacher = nil
+    if row[:email].present?
+      teacher = EmailAddress.find_by(email: row[:email].to_s.strip.downcase)&.teacher ||
+        Teacher.find_by(email: row[:email])
+    end
+    teacher ||= Teacher.find_by(snap: row[:snap]) if row[:snap].present?
+    teacher
+  end
+
   def teacher_new_params_from_row(row)
     { first_name: row[:first_name],
       last_name: row[:last_name],
@@ -98,7 +112,6 @@ module CsvProcess
       personal_website: row[:personal_website],
       status: row[:status],
       school_id: row[:school_id],
-      email: row[:email],
       snap: row[:snap] }
   end
 
@@ -116,6 +129,7 @@ module CsvProcess
     { name: row[:school_name],
       city: row[:school_city],
       state: row[:school_state],
+      country: row[:school_country],
       website: row[:school_website],
       grade_level: row[:school_grade_level],
       school_type: row[:school_type],

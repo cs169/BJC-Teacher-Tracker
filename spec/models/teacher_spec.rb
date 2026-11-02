@@ -57,6 +57,34 @@ RSpec.describe Teacher, type: :model do
     expect(teacher.valid?).to be true
   end
 
+  describe "languages validation" do
+    it "accepts recognized languages" do
+      teacher.languages = ["English", "Spanish"]
+      expect(teacher).to be_valid
+    end
+
+    it "rejects unrecognized languages" do
+      teacher.languages = ["English", "Klingon"]
+      expect(teacher).not_to be_valid
+      expect(teacher.errors[:languages].first).to include("Klingon")
+    end
+
+    it "rejects an empty language list" do
+      teacher.languages = []
+      expect(teacher).not_to be_valid
+    end
+
+    it "rejects a list that is empty after blank entries are removed" do
+      teacher.languages = [""]
+      expect(teacher).not_to be_valid
+    end
+
+    it "does not crash when languages is nil" do
+      teacher.languages = nil
+      expect(teacher).not_to be_valid
+    end
+  end
+
   it "requires personal_website" do
       new_teacher = Teacher.new(
         first_name: "Test",

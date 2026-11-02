@@ -17,7 +17,10 @@ class MergeController < ApplicationController
     merged_attributes = @merged_teacher.attributes.except("id")
     Teacher.transaction do
       merge_email_addresses(@from_teacher, @into_teacher)
-      @from_teacher.destroy
+      # merge_email_addresses re-parents the email rows, but @from_teacher's
+      # association is already loaded, so dependent: :destroy would destroy the
+      # rows just moved. Reload so destroy only sees rows still belonging to it.
+      @from_teacher.reload.destroy
       @into_teacher.update!(merged_attributes)
     end
     redirect_to teachers_path, notice: "Teachers merged successfully."
@@ -117,8 +120,8 @@ class MergeController < ApplicationController
     end
 
     from_teacher.email_addresses.each do |email_address|
-      if existing_emails.select(:email).include?(email_address.email.strip.downcase)
-        puts "[WARN]: Merge Teacher #{from_teacher.id} into #{into_teacher.id} found duplicate email: '#{email_address.email}'"
+      if existing_emails.exists?(email: email_address.email.strip.downcase)
+        Rails.logger.warn("Merge Teacher #{from_teacher.id} into #{into_teacher.id} found duplicate email: '#{email_address.email}'")
         next
       end
       email_address.update!(teacher: into_teacher)

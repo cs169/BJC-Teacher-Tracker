@@ -11,10 +11,9 @@ class TeachersController < ApplicationController
 
   before_action :load_pages, only: [:new, :create, :edit, :update]
   before_action :load_teacher, except: [:new, :index, :create, :import, :search]
-  before_action :sanitize_params, only: [:new, :create, :edit, :update]
   before_action :require_login, except: [:new, :create]
-  before_action :require_admin, only: [:validate, :deny, :destroy, :index, :show, :search]
-  before_action :require_edit_permission, only: [:edit, :update, :resend_welcome_email]
+  before_action :require_admin, only: [:validate, :deny, :destroy, :index, :show, :search, :import, :request_info]
+  before_action :require_edit_permission, only: [:edit, :update, :resend_welcome_email, :upload_file, :remove_file]
 
   rescue_from ActiveRecord::RecordNotUnique, with: :deny_access
 
@@ -68,7 +67,7 @@ class TeachersController < ApplicationController
     end
 
     @teacher = Teacher.new(teacher_params)
-    @teacher.email_addresses.build(email: params[:email][:primary], primary: true)
+    @teacher.email_addresses.build(email: primary_email_param, primary: true)
 
     @teacher.try_append_ip(request.remote_ip)
     @teacher.session_count += 1
@@ -108,7 +107,7 @@ class TeachersController < ApplicationController
     load_school
     ordered_schools
 
-    primary_email = params.dig(:email, :primary)
+    primary_email = primary_email_param
 
     @teacher.assign_attributes(teacher_params)
 
@@ -220,7 +219,7 @@ class TeachersController < ApplicationController
 
   def existing_teacher
     # Find by email, but allow updating other info.
-    @teacher = EmailAddress.find_by(email: params.dig(:email, :primary))&.teacher
+    @teacher = EmailAddress.find_by(email: primary_email_param)&.teacher
     if @teacher && defined?(current_user.id) && (current_user.id == @teacher.id)
       params[:id] = current_user.id
       update
@@ -269,21 +268,35 @@ class TeachersController < ApplicationController
   end
 
   def attach_new_files_if_any
-    if params.dig(:teacher, :more_files).present?
-      params[:teacher][:more_files].each do |file|
-        @teacher.files.attach(file)
-      end
+    more_files = params.require(:teacher).permit(more_files: [])[:more_files]
+    more_files&.each do |file|
+      @teacher.files.attach(file)
     end
   end
 
   def teacher_params
-    teacher_attributes = [:first_name, :last_name, :school, :status, :snap,
-                          :more_info, :verification_notes, :personal_website, :education_level, :school_id, languages: [], files: [],
-                        more_files: []]
-    admin_attributes = [:application_status, :request_reason, :skip_email]
+    # more_files is intentionally not mass-assignable: uploads sent under that
+    # name belong in the files collection and are attached explicitly by
+    # attach_new_files_if_any.
+    teacher_attributes = [:first_name, :last_name, :status, :snap,
+                          :more_info, :verification_notes, :personal_website, :education_level, :school_id, { languages: [] }]
+    # Only the signup form submits teacher[files]; on update, assigning files
+    # would replace the existing attachment set, and attachments are managed
+    # through the dedicated upload_file/remove_file actions instead.
+    teacher_attributes << { files: [] } if action_name == "create"
+    # application_status is the only admin-only teacher attribute; request_reason
+    # and skip_email are submitted as top-level params (see #update et al.), not
+    # nested under :teacher, and are not model attributes.
+    admin_attributes = [:application_status]
     teacher_attributes.push(*admin_attributes) if is_admin?
 
     params.require(:teacher).permit(*teacher_attributes)
+  end
+
+  # The signup/edit forms submit the primary email outside the teacher hash;
+  # permit it explicitly rather than reading raw params.
+  def primary_email_param
+    params.fetch(:email, ActionController::Parameters.new).permit(:primary)[:primary]
   end
 
   def omniauth_data
@@ -297,24 +310,6 @@ class TeachersController < ApplicationController
         School.all.order(:name).reject { |s| s.id == @teacher.school_id }
     else
       @ordered_schools ||= School.all.order(:name)
-    end
-  end
-
-  def sanitize_params
-    teacher = params[:teacher]
-    if teacher && teacher[:status]
-      teacher[:status] = teacher[:status].to_i
-    end
-    if teacher && teacher[:education_level]
-      teacher[:education_level] = teacher[:education_level].to_i
-    end
-
-    school = params[:school]
-    if school && school[:grade_level]
-      school[:grade_level] = school[:grade_level].to_i
-    end
-    if school && school[:school_type]
-      school[:school_type] = school[:school_type].to_i
     end
   end
 

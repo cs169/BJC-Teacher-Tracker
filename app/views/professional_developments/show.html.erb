@@ -96,8 +96,6 @@
             <%= f.select :attended, [['Yes', true], ['No', false]], { prompt: "Did the teacher attend?" }, { class: "form-control", required: true } %>
           </div>
 
-          <%= f.hidden_field :professional_development_id, value: @professional_development.id %>
-
           <%= f.submit "Add", class: "btn btn-primary" %>
         <% end %>
       </div>

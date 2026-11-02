@@ -54,7 +54,11 @@ class EmailTemplatesController < ApplicationController
 
   private
   def template_params
-    params.require(:email_template).permit(:body, :subject, :title, :to)
+    permitted = [:body, :subject, :to]
+    # The title is the mailer's lookup key (TeacherMailer#email_template finds
+    # templates by title), so it is set at creation and cannot be renamed.
+    permitted << :title if action_name == "create"
+    params.require(:email_template).permit(*permitted)
   end
 
   def load_ordered_email_templates

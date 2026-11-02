@@ -66,7 +66,10 @@ class PdRegistrationsController < ApplicationController
     end
   end
 
+  # professional_development_id is deliberately not permitted: it always comes
+  # from the nested route (see create's merge), so a registration cannot be
+  # moved to another professional development through the params.
   def pd_registration_params
-    params.require(:pd_registration).permit(:teacher_id, :attended, :role, :professional_development_id)
+    params.require(:pd_registration).permit(:teacher_id, :attended, :role)
   end
 end
