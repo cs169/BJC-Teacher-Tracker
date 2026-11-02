@@ -1,12 +1,15 @@
 name: All Specs
 
-on: [push, pull_request, workflow_dispatch]
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
 
 jobs:
   specs:
     name: CI
     runs-on: ubuntu-latest
-    continue-on-error: true
     services:
       postgres:
         image: postgres:13
@@ -32,7 +35,7 @@ jobs:
       - name: Use Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: 3.2.3
+          ruby-version: 3.3.9
           bundler-cache: true
           
       - run: bin/yarn
@@ -41,7 +44,6 @@ jobs:
       - run: bundle exec rake db:migrate
       - name: Run ${{ matrix.suite }}
         run: bundle exec ${{ matrix.suite }}
-        # continue-on-error: true
 
       - name: CodeCov Coverage
         uses: codecov/codecov-action@v2

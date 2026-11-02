@@ -39,6 +39,28 @@ RSpec.describe EmailTemplatesController, type: :controller do
     expect(email.subject).to eq("Test Subject")
   end
 
+  describe "POST #update" do
+    it "does not allow renaming a template, since titles are the mailer lookup key" do
+      allow_any_instance_of(ApplicationController).to receive(:is_admin?).and_return(true)
+      welcome_email = EmailTemplate.find_by(path: "teacher_mailer/welcome_email")
+      original_title = welcome_email.title
+      post :update, params: { id: welcome_email.id,
+                              email_template: { title: "Renamed", subject: "Still updates" } }
+      welcome_email.reload
+      expect(welcome_email.title).to eq(original_title)
+      expect(welcome_email.subject).to eq("Still updates")
+    end
+
+    it "keeps the title of non-required templates too" do
+      allow_any_instance_of(ApplicationController).to receive(:is_admin?).and_return(true)
+      template = EmailTemplate.create!(title: "Custom Note", body: "Hello", to: "someone@example.com")
+      post :update, params: { id: template.id, email_template: { title: "Other", body: "Updated" } }
+      template.reload
+      expect(template.title).to eq("Custom Note")
+      expect(template.body).to eq("Updated")
+    end
+  end
+
   describe "GET #new" do
     it "assigns a new email template and renders new" do
       allow_any_instance_of(ApplicationController).to receive(:is_admin?).and_return(true)
@@ -86,6 +108,8 @@ RSpec.describe EmailTemplatesController, type: :controller do
 
   describe "PUT #update" do
     let(:template_params) { { title: "Updated Template", body: "Updated Body", subject: "Updated Subject", to: "updated@example.com" } }
+    # :title is only permitted on create; update must not receive it.
+    let(:permitted_update_params) { { body: "Updated Body", subject: "Updated Subject", to: "updated@example.com" } }
     let(:email_template) { double("EmailTemplate", id: 1, title: "New Email Template") }
 
     before do
@@ -94,15 +118,18 @@ RSpec.describe EmailTemplatesController, type: :controller do
     end
 
     it "successfully updates and redirects to email templates" do
-      allow(email_template).to receive(:update).with(hash_including(template_params)).and_return(true)
+      allow(email_template).to receive(:update).with(hash_including(permitted_update_params)).and_return(true)
       allow(email_template).to receive(:save).and_return(true)
       put :update, params: { id: email_template.id, email_template: template_params }
+      expect(email_template).to have_received(:update) do |args|
+        expect(args.to_h).not_to have_key("title")
+      end
       expect(flash[:success]).to be_present
       expect(response).to redirect_to(email_templates_path)
     end
 
     it "fails to update and renders edit" do
-      allow(email_template).to receive(:update).with(hash_including(template_params)).and_return(false)
+      allow(email_template).to receive(:update).with(hash_including(permitted_update_params)).and_return(false)
       allow(email_template).to receive(:save).and_return(false)
       allow(email_template).to receive_message_chain(:errors, :full_messages, :join).and_return(["Error message"])
       put :update, params: { id: email_template.id, email_template: template_params }

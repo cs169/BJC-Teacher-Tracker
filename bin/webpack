@@ -8,6 +8,7 @@ ENV["BUNDLE_GEMFILE"] ||= File.expand_path("../../Gemfile",
   Pathname.new(__FILE__).realpath)
 
 require "bundler/setup"
+require "logger" # Rails 6.1 on Ruby 3.3+ needs Logger required explicitly.
 
 require "webpacker"
 require "webpacker/webpack_runner"

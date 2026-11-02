@@ -2,6 +2,11 @@
 
 require_relative "boot"
 
+# Ruby 3.3 removed Logger from the default set of autoloaded constants that
+# ActiveSupport::LoggerThreadSafeLevel depends on. Requiring it explicitly
+# before Rails boots keeps Rails 6.1 compatible with newer Rubies.
+require "logger"
+
 require "rails"
 # Pick the frameworks you want:
 require "active_model/railtie"

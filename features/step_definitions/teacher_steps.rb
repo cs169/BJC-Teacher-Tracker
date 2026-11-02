@@ -132,18 +132,16 @@ Then("the upload file field should be visible") do
   expect(page).to have_selector("#upload_file_field", visible: :visible)
 end
 
+# jQuery is supplied to bundled modules via webpack's ProvidePlugin, so `$` is
+# not a page global and execute_script("$(...)") raises. Capybara's make_visible
+# handles the hidden input natively.
 When("I attach the file with name {string} on the edit page") do |file_name|
-  page.execute_script("$('teacher_more_files').click()")
-  attach_file("teacher_more_files", Rails.root.join("spec/fixtures", file_name))
+  attach_file("teacher_more_files", Rails.root.join("spec/fixtures", file_name), make_visible: true)
 end
 
 # Note: this is an admin-only action
 When("I attach the file with name {string} on the show page") do |file_name|
-  page.execute_script("$('label.btn.btn-primary.btn-purple.mr-2').click()"); # clicks the "Add a File" button
-  # Execute JavaScript to make the file input field temporarily visible
-  page.execute_script("$('#file-upload-field').css('display', 'block');")
-  attach_file("file-upload-field", Rails.root.join("spec/fixtures", file_name))
-  page.execute_script("$('#file-upload-field').css('display', 'none');")
+  attach_file("file-upload-field", Rails.root.join("spec/fixtures", file_name), make_visible: true)
 end
 
 When("I click the first file deletion button") do

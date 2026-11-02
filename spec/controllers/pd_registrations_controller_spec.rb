@@ -110,6 +110,17 @@ RSpec.describe "PdRegistrations", type: :request do
           expect(flash.now[:alert]).to include("Teacher must exist and Role  is not a valid role")
         end
       end
+
+      it "cannot move a registration to a different professional development" do
+        other_pd = ProfessionalDevelopment.create!(name: "Other PD", city: "City", state: "State",
+                                                   country: "Country", start_date: Date.today,
+                                                   end_date: Date.tomorrow, grade_level: "university")
+        patch professional_development_pd_registration_path(professional_development, pd_registration),
+              params: { pd_registration: { role: "leader", professional_development_id: other_pd.id } }
+        pd_registration.reload
+        expect(pd_registration.professional_development_id).to eq(professional_development.id)
+        expect(pd_registration.role).to eq("leader")
+      end
     end
 
     describe "DELETE" do

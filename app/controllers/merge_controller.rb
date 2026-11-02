@@ -17,7 +17,10 @@ class MergeController < ApplicationController
     merged_attributes = @merged_teacher.attributes.except("id")
     Teacher.transaction do
       merge_email_addresses(@from_teacher, @into_teacher)
-      @from_teacher.destroy
+      # merge_email_addresses re-parents the email rows, but @from_teacher's
+      # association is already loaded, so dependent: :destroy would destroy the
+      # rows just moved. Reload so destroy only sees rows still belonging to it.
+      @from_teacher.reload.destroy
       @into_teacher.update!(merged_attributes)
     end
     redirect_to teachers_path, notice: "Teachers merged successfully."
@@ -54,9 +57,9 @@ class MergeController < ApplicationController
     merged_attributes = {}
     into_teacher.attributes.each do |attr_name, attr_value|
       from_teacher_attr_value = from_teacher.attributes[attr_name]
-      if attr_value.blank?
+      if missing_for_merge?(attr_value)
         merged_attributes[attr_name] = from_teacher_attr_value
-      elsif from_teacher_attr_value.blank?
+      elsif missing_for_merge?(from_teacher_attr_value)
         merged_attributes[attr_name] = attr_value
       else
         case attr_name
@@ -86,9 +89,9 @@ class MergeController < ApplicationController
     merged_attributes = {}
     into_school.attributes.each do |attr_name, attr_value|
       from_school_attr_value = from_school.attributes[attr_name]
-      if attr_value.blank?
+      if missing_for_merge?(attr_value)
         merged_attributes[attr_name] = from_school_attr_value
-      elsif from_school_attr_value.blank?
+      elsif missing_for_merge?(from_school_attr_value)
         merged_attributes[attr_name] = attr_value
       else
         case attr_name
@@ -106,6 +109,13 @@ class MergeController < ApplicationController
     School.new(merged_attributes)
   end
 
+  # `false` and `0` are meaningful values, not missing ones. Using `blank?` here
+  # would treat `admin: false` as absent and let a merge silently copy
+  # `admin: true` over from the other record.
+  def missing_for_merge?(value)
+    value.nil? || (value.respond_to?(:empty?) && value.empty?)
+  end
+
   # Handle merging EmailAddress records, so they all belong to the saved record.
   # This method is designed to be inside a transaction for safety.
   def merge_email_addresses(from_teacher, into_teacher)
@@ -117,8 +127,8 @@ class MergeController < ApplicationController
     end
 
     from_teacher.email_addresses.each do |email_address|
-      if existing_emails.select(:email).include?(email_address.email.strip.downcase)
-        puts "[WARN]: Merge Teacher #{from_teacher.id} into #{into_teacher.id} found duplicate email: '#{email_address.email}'"
+      if existing_emails.exists?(email: email_address.email.strip.downcase)
+        Rails.logger.warn("Merge Teacher #{from_teacher.id} into #{into_teacher.id} found duplicate email: '#{email_address.email}'")
         next
       end
       email_address.update!(teacher: into_teacher)

@@ -57,7 +57,13 @@ When(/^(?:|I )fill in "([^"]*)" with "([^"]*)"$/) do |field, value|
 end
 
 When(/^(?:|I )fill in TinyMCE email form with "([^"]*)"$/) do |value|
-  page.execute_script('$(tinymce.editors[0].setContent("' + value + '"))')
+  # TinyMCE initializes asynchronously after the page renders, so editors[0]
+  # can be undefined when the step first runs. Poll until at least one editor
+  # is registered before setting content.
+  Timeout.timeout(Capybara.default_max_wait_time) do
+    sleep 0.05 until page.evaluate_script("typeof tinymce !== 'undefined' && tinymce.editors && tinymce.editors.length > 0")
+  end
+  page.execute_script("tinymce.editors[0].setContent(#{value.to_json})")
 end
 
 When(/^(?:|I )follow the first "([^"]*)" link$/) do |link_text|
@@ -128,9 +134,14 @@ Then(/^(?:|I )should see "([^"]*)"$/) do |text|
 end
 
 Then(/^(?:|I )should see hidden element "([^"]*)"$/) do |text|
+  # Use ensure so a failed assertion can't leave the global flag flipped and
+  # poison later scenarios that expect the default (true).
   Capybara.ignore_hidden_elements = false
-  expect(page.html).to match(/#{text}/)
-  Capybara.ignore_hidden_elements = true
+  begin
+    expect(page.html).to match(/#{text}/)
+  ensure
+    Capybara.ignore_hidden_elements = true
+  end
 end
 
 Then(/^(?:|I )should see \/([^\/]*)\/$/) do |regexp|
