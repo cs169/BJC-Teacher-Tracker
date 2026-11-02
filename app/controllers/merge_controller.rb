@@ -57,9 +57,9 @@ class MergeController < ApplicationController
     merged_attributes = {}
     into_teacher.attributes.each do |attr_name, attr_value|
       from_teacher_attr_value = from_teacher.attributes[attr_name]
-      if attr_value.blank?
+      if missing_for_merge?(attr_value)
         merged_attributes[attr_name] = from_teacher_attr_value
-      elsif from_teacher_attr_value.blank?
+      elsif missing_for_merge?(from_teacher_attr_value)
         merged_attributes[attr_name] = attr_value
       else
         case attr_name
@@ -89,9 +89,9 @@ class MergeController < ApplicationController
     merged_attributes = {}
     into_school.attributes.each do |attr_name, attr_value|
       from_school_attr_value = from_school.attributes[attr_name]
-      if attr_value.blank?
+      if missing_for_merge?(attr_value)
         merged_attributes[attr_name] = from_school_attr_value
-      elsif from_school_attr_value.blank?
+      elsif missing_for_merge?(from_school_attr_value)
         merged_attributes[attr_name] = attr_value
       else
         case attr_name
@@ -107,6 +107,13 @@ class MergeController < ApplicationController
       end
     end
     School.new(merged_attributes)
+  end
+
+  # `false` and `0` are meaningful values, not missing ones. Using `blank?` here
+  # would treat `admin: false` as absent and let a merge silently copy
+  # `admin: true` over from the other record.
+  def missing_for_merge?(value)
+    value.nil? || (value.respond_to?(:empty?) && value.empty?)
   end
 
   # Handle merging EmailAddress records, so they all belong to the saved record.

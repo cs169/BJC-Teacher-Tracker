@@ -31,7 +31,6 @@ module CsvProcess
         if !school # Prevent creating the same school multiple times if same csv uploaded again
           school = School.new(school_params_from_row(row))
           if school.save
-            row[:school_id] = school.id
             csv_import_summary_hash[:school_count] += 1
           else
             csv_import_summary_hash[:fail_count] += 1
@@ -39,6 +38,8 @@ module CsvProcess
             next # don't try to create teacher
           end
         end
+        # Either way the teacher params below need the resolved school.
+        row[:school_id] = school.id
       elsif !school # row[:school_id] exists, but is invalid
         csv_import_summary_hash[:fail_count] += 1
         csv_import_summary_hash[:failed_emails].append(row[:email])
@@ -129,7 +130,9 @@ module CsvProcess
     { name: row[:school_name],
       city: row[:school_city],
       state: row[:school_state],
-      country: row[:school_country],
+      # School validates country for presence and ISO-3166 inclusion. Default to
+      # US, the implicit value for every school predating the country column.
+      country: row[:school_country].presence || "US",
       website: row[:school_website],
       grade_level: row[:school_grade_level],
       school_type: row[:school_type],

@@ -58,6 +58,24 @@ RSpec.describe MergeController, type: :request do
       expect(EmailAddress.exists?(variant.id)).to be false
     end
 
+    it "does not promote a non-admin by merging an admin into them" do
+      from_teacher.update!(admin: true)
+      expect(into_teacher.admin).to be(false)
+
+      patch merge_path(from: from_teacher.id, into: into_teacher.id)
+
+      expect(into_teacher.reload.admin).to be(false)
+    end
+
+    it "sums session counts rather than treating a zero count as missing" do
+      from_teacher.update!(session_count: 3)
+      into_teacher.update!(session_count: 0)
+
+      patch merge_path(from: from_teacher.id, into: into_teacher.id)
+
+      expect(into_teacher.reload.session_count).to eq(3)
+    end
+
     it "does not modify any records when previewing" do
       expect { get preview_merge_path(from: from_teacher.id, into: into_teacher.id) }
         .not_to change { EmailAddress.order(:id).pluck(:id, :teacher_id, :email) }
