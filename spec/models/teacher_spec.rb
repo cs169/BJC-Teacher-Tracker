@@ -184,6 +184,11 @@ RSpec.describe Teacher, type: :model do
         expect(teacher.course_category).to eq(expected_category)
       end
     end
+
+    it "returns 'Other' when status is nil" do
+      teacher.status = nil
+      expect(teacher.course_category).to eq("Other")
+    end
   end
 
   describe "MailBluster helper methods" do
