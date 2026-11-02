@@ -62,9 +62,12 @@ class TeacherMailer < ApplicationMailer
       denial_reason: @denial_reason,
       request_reason: @request_reason,
       request_info_reason: @request_reason,
-      view_teacher_url: teacher_url(@teacher)
+      # Admin-only page; use only in emails sent to admins.
+      view_teacher_url: @teacher&.persisted? ? teacher_url(@teacher) : nil,
+      # The teacher's own edit page; safe to send to the teacher.
+      edit_teacher_url: @teacher&.persisted? ? edit_teacher_url(@teacher) : nil
     }
-    base_rules.merge!(@teacher.email_attributes)
+    base_rules.merge!(@teacher.email_attributes) if @teacher
     base_rules.with_indifferent_access
   end
 
