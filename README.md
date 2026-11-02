@@ -231,6 +231,28 @@ bundle exec rake mailbluster:sync_teacher[123]
 bundle exec rake mailbluster:status
 ```
 
+## SES bounce tracking (setup)
+
+> **Status:** the webhook is deployed but **not active in production yet** — no SNS topic is subscribed and `SNS_ALLOWED_TOPIC_ARNS` is unset, so it rejects everything.
+
+`POST /webhooks/ses` receives Amazon SES events via SNS and updates the `emails_sent`, `emails_delivered`, `soft_bounce_count`, `hard_bounce_count`, and `bounced` fields on `EmailAddress`. Every event is also stored in `ses_delivery_events`. Messages are checked against an SNS topic allowlist and their AWS signature before anything is processed.
+
+To turn it on:
+
+1. **Create an SNS topic** (e.g. `bjc-ses-events`) in the same region as SES.
+2. **Send SES events to it.** Either:
+   - *Preferred:* create an SES **configuration set** with an **SNS event destination** for `Send`, `Delivery`, `Bounce`, and `Complaint`, then set it as the **default configuration set** of the sending identity (domain or address). The app sends over SMTP and does not set an `X-SES-CONFIGURATION-SET` header, so the default is the only way the configuration set gets applied.
+   - *Or:* on the identity, enable **feedback notifications** to the topic for Bounce, Complaint, and Delivery. (No `Send` events in this mode, so `emails_sent` won't move.)
+3. **Set the allowlist on Heroku** before subscribing. Without it, every message gets a 401, including the subscription confirmation:
+   ```bash
+   heroku config:set SNS_ALLOWED_TOPIC_ARNS=arn:aws:sns:us-west-2:123456789012:bjc-ses-events
+   ```
+   (Comma-separated if there's more than one.)
+4. **Subscribe the app** to the topic: protocol **HTTPS**, endpoint `https://<your-host>/webhooks/ses`. Leave *raw message delivery* off. The app confirms the subscription by itself.
+5. **Check it works:** the subscription should show **Confirmed** in the SNS console. Send an email (or use the SES mailbox simulator, e.g. `bounce@simulator.amazonses.com`), then check `heroku run bin/rails runner 'p SesDeliveryEvent.last'` or the teacher's Email Delivery Stats. Webhook problems are logged with the `[SES Webhook]` prefix.
+
+For local development, `bin/rails "ses:simulate[teacher@example.com,hard_bounce]"` fires a fixture event without AWS, and `bin/rails ses:reset` clears the counters. Both refuse to run outside development and test.
+
 
 
 ### CodeClimate Local Test

@@ -5,34 +5,40 @@
 # without needing real AWS traffic. Remove this file once the integration
 # has been verified in a real environment.
 namespace :ses do
-  FIXTURE_DIR = Rails.root.join("spec/fixtures/files/ses")
-  EVENT_FIXTURES = {
-    "send" => "send",
-    "delivery" => "delivery",
-    "soft_bounce" => "soft_bounce",
-    "hard_bounce" => "hard_bounce",
-    "complaint" => "complaint"
-  }.freeze
-
   desc "Fire a fake SES event at a teacher's email. Usage: rake 'ses:simulate[teacher@example.com,delivery]'"
   task :simulate, [:email, :event] => :environment do |_t, args|
+    abort "Refusing to run in #{Rails.env}." unless Rails.env.development? || Rails.env.test?
+
+    fixture_dir = Rails.root.join("spec/fixtures/files/ses")
+    event_fixtures = %w[send delivery soft_bounce hard_bounce complaint]
+
     email = args[:email]
     event_key = (args[:event] || "delivery").downcase
 
     if email.blank?
       puts "Usage: rake 'ses:simulate[teacher@example.com,delivery]'"
-      puts "  event can be: #{EVENT_FIXTURES.keys.join(', ')}"
+      puts "  event can be: #{event_fixtures.join(', ')}"
       exit 1
     end
 
-    fixture_name = EVENT_FIXTURES[event_key]
-    if fixture_name.nil?
-      puts "Unknown event #{event_key.inspect}. Valid: #{EVENT_FIXTURES.keys.join(', ')}"
+    unless event_fixtures.include?(event_key)
+      puts "Unknown event #{event_key.inspect}. Valid: #{event_fixtures.join(', ')}"
       exit 1
     end
 
-    payload = JSON.parse(File.read(FIXTURE_DIR.join("#{fixture_name}.json")))
-    rewrite_recipient!(payload, email)
+    payload = JSON.parse(File.read(fixture_dir.join("#{event_key}.json")))
+    # Point every recipient field in the fixture at the given address.
+    payload["mail"] ||= {}
+    payload["mail"]["destination"] = [email]
+    payload["mail"]["commonHeaders"] ||= {}
+    payload["mail"]["commonHeaders"]["to"] = [email]
+    payload["delivery"]["recipients"] = [email] if payload["delivery"].is_a?(Hash)
+    if payload["bounce"].is_a?(Hash) && payload["bounce"]["bouncedRecipients"].is_a?(Array)
+      payload["bounce"]["bouncedRecipients"] = [{ "emailAddress" => email }]
+    end
+    if payload["complaint"].is_a?(Hash) && payload["complaint"]["complainedRecipients"].is_a?(Array)
+      payload["complaint"]["complainedRecipients"] = [{ "emailAddress" => email }]
+    end
 
     sns_message_id = "dev-sim-#{SecureRandom.hex(6)}"
     SesEventProcessor.new(payload, sns_message_id:).call
@@ -62,24 +68,5 @@ namespace :ses do
     )
     SesDeliveryEvent.delete_all
     puts "Reset SES counters on #{EmailAddress.count} email addresses and cleared SesDeliveryEvent rows."
-  end
-
-  def rewrite_recipient!(payload, email)
-    payload["mail"] ||= {}
-    payload["mail"]["destination"] = [email]
-    payload["mail"]["commonHeaders"] ||= {}
-    payload["mail"]["commonHeaders"]["to"] = [email]
-
-    if payload["delivery"].is_a?(Hash)
-      payload["delivery"]["recipients"] = [email]
-    end
-
-    if payload["bounce"].is_a?(Hash) && payload["bounce"]["bouncedRecipients"].is_a?(Array)
-      payload["bounce"]["bouncedRecipients"] = [{ "emailAddress" => email }]
-    end
-
-    if payload["complaint"].is_a?(Hash) && payload["complaint"]["complainedRecipients"].is_a?(Array)
-      payload["complaint"]["complainedRecipients"] = [{ "emailAddress" => email }]
-    end
   end
 end
