@@ -132,7 +132,7 @@ class School < ApplicationRecord
 
   def prefix_url(url)
     return unless url
-    url.match?(/^https?:/) ? url : "https://#{url}"
+    url.match?(/\Ahttps?:/i) ? url : "https://#{url}"
   end
 
   def maps_api_location
