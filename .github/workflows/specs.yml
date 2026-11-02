@@ -6,7 +6,6 @@ jobs:
   specs:
     name: CI
     runs-on: ubuntu-latest
-    continue-on-error: true
     services:
       postgres:
         image: postgres:13
@@ -41,7 +40,6 @@ jobs:
       - run: bundle exec rake db:migrate
       - name: Run ${{ matrix.suite }}
         run: bundle exec ${{ matrix.suite }}
-        # continue-on-error: true
 
       - name: CodeCov Coverage
         uses: codecov/codecov-action@v2

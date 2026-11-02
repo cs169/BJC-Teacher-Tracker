@@ -70,4 +70,27 @@ RSpec.describe CsvProcess do
     new_school = School.find_by(name: "Imported High")
     expect(new_school.reload.teachers_count).to eq(1)
   end
+
+  it "links the teacher to an existing school matched by name" do
+    row = { first_name: "New", last_name: "Teacher", status: 0,
+            personal_website: "https://example.com", email: "reuse@example.com",
+            school_name: school.name }
+
+    expect { processor.process_record([row]) }.not_to change(School, :count)
+
+    expect(EmailAddress.find_by(email: "reuse@example.com").teacher.school).to eq(school)
+  end
+
+  it "defaults a new school's country to US when the row has none" do
+    row = { first_name: "New", last_name: "Teacher", status: 0,
+            personal_website: "https://example.com", email: "with.school@example.com",
+            school_name: "Brand New High", school_city: "Oakland", school_state: "CA",
+            school_website: "https://bnh.example.com", school_grade_level: 2, school_type: 0 }
+
+    result = processor.process_record([row])
+
+    expect(result[:school_count]).to eq(1)
+    expect(result[:success_count]).to eq(1)
+    expect(School.find_by(name: "Brand New High").country).to eq("US")
+  end
 end

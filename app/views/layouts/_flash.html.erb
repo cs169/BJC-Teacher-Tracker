@@ -3,6 +3,9 @@
     <button type="button" class="close" data-dismiss="alert" aria-label="Dismiss">
         <span aria-hidden="true">✖️</span>
     </button>
-    <%= msg.html_safe %>
+    <%# Flash messages interpolate user-supplied data (teacher and school names,
+        CSV contents), so sanitize rather than trusting them wholesale. A few
+        messages contain an intentional link, which sanitize keeps. %>
+    <%= sanitize(msg) %>
   </div>
 <% end %>

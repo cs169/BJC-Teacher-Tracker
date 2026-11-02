@@ -157,11 +157,11 @@ Scenario: Homeschool teacher can add/view supporting files
   Then  I can log in with Google
   When I set my status as "I am teaching homeschool with the BJC curriculum."
   Then I should see "No files attached yet."
-  When I attach the file with name "test_file.txt"
+  When I attach the file with name "test_file.txt" on the edit page
   And I press "Update"
   And I follow "test_file.txt"
   Then I should see "test_file.txt"
-  When I attach the file with name "test_file2.txt"
+  When I attach the file with name "test_file2.txt" on the edit page
   And I press "Update"
   Then I should see "test_file.txt"
   And I should see "test_file2.txt"
