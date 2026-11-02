@@ -21,7 +21,13 @@ function initSchoolsTable() {
       "<'row form-row'<'col-6 form-inline'i><'col-6 form-inline'lf>>" +
       "<'row'<'col-12'tr>>" +
       "<'row'<'col-sm-12 col-md-5'B><'col-sm-12 col-md-4'p>>",
-    buttons: ['copy', 'csv'],
+    // Server-side processing only has the current page client-side, so these
+    // buttons export just that page. "Export All (CSV)" above the table
+    // downloads every school.
+    buttons: [
+      { extend: 'copy', text: 'Copy Page' },
+      { extend: 'csv', text: 'CSV (This Page)' }
+    ],
     language: {
       search: '_INPUT_',
       searchPlaceholder: 'Search'

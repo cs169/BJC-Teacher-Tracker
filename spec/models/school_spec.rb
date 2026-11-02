@@ -24,4 +24,11 @@ RSpec.describe School, type: :model do
     end
   end
 
+  describe ".csv_export" do
+    it "includes a header row and every school" do
+      csv = CSV.parse(School.csv_export, headers: true)
+      expect(csv.headers).to eq School::CSV_EXPORT_COLUMNS.keys
+      expect(csv.map { |row| row["Name"] }).to match_array(School.pluck(:name))
+    end
+  end
 end

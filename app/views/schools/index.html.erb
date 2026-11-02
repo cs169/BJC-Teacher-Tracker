@@ -1,6 +1,10 @@
 <%= provide(:title, "BJC Schools") %>
 <%= provide(:header_button, "New School") %>
 
+<div class="mb-2">
+  <%= link_to "Export All (CSV)", schools_path(format: :csv), class: "btn btn-primary" %>
+</div>
+
 <table id="schools-table" class="table table-striped" data-source="<%= schools_path(format: :json) %>">
   <thead class="thead-dark">
     <tr>
