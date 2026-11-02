@@ -105,9 +105,9 @@ class Teacher < ApplicationRecord
   SPARKS_STATUSES = %i[middle_school_bjc].freeze
 
   def course_category
-    if CSP_STATUSES.include?(status.to_sym)
+    if CSP_STATUSES.include?(status&.to_sym)
       "CSP"
-    elsif SPARKS_STATUSES.include?(status.to_sym)
+    elsif SPARKS_STATUSES.include?(status&.to_sym)
       "Sparks"
     else
       "Other"

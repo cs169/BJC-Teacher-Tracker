@@ -47,7 +47,7 @@
       <div class="col-sm-3 font-weight-bold">Website:</div>
       <div class="col-sm-9">
         <% if school.website.present? %>
-          <%= link_to(school.website, school.website) %>
+          <%= safe_external_link(school.website, school.website) %>
         <% end %>
       </div>
     </div>

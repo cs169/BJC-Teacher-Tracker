@@ -31,7 +31,7 @@
 
       <div class="col-sm-4">
         <h5>URL</h5>
-        <%= link_to(@school.website, @school.website) %>
+        <%= safe_external_link(@school.website, @school.website) %>
       </div>
     </div>
 

@@ -8,7 +8,7 @@
   <% else %>
     <%= link_to(teacher.full_name, teacher_path(teacher)) %>
   <% end %>
-  <%= link_to('(Web)', teacher.personal_website, target: '_blank') if teacher.personal_website.present? %>
+  <%= safe_external_link('(Web)', teacher.personal_website, target: '_blank') if teacher.personal_website.present? %>
 </td>
 <td>
   <% sorted_emails = teacher.email_addresses.sort_by { |e| e.primary? ? 0 : 1 } %>

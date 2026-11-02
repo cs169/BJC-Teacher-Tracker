@@ -8,6 +8,7 @@ class SchoolsController < ApplicationController
     respond_to do |format|
       format.html
       format.json { render json: SchoolDatatable.new(params) }
+      format.csv { send_data School.csv_export, filename: "schools-#{Date.today}.csv" }
     end
   end
 

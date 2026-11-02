@@ -3,6 +3,13 @@
 class SchoolDatatable < AjaxDatatablesRails::ActiveRecord
   include Rails.application.routes.url_helpers
 
+  DEFAULT_PAGE_LENGTH = 100
+  MAX_PAGE_LENGTH = 1000
+
+  def initialize(params, options = {})
+    super(sanitize_params(params), options)
+  end
+
   def view_columns
     @view_columns ||= {
       name: { source: "School.name", cond: :like },
@@ -37,12 +44,50 @@ class SchoolDatatable < AjaxDatatablesRails::ActiveRecord
   private
   SEARCHABLE_COLUMNS = %w[name city state country website].freeze
 
-  def filter_records(records)
-    search_value = params.dig(:search, :value).presence
-    return records unless search_value
+  TERM_CONDITION = "(#{SEARCHABLE_COLUMNS.map { |col| "schools.#{col} ILIKE :term" }.join(' OR ')})"
 
-    conditions = SEARCHABLE_COLUMNS.map { |col| "schools.#{col} ILIKE :q" }.join(" OR ")
-    records.where(conditions, q: "%#{search_value}%")
+  # Each whitespace-separated term must match at least one searchable column,
+  # so "Berkeley CA" matches a school in Berkeley, CA.
+  def filter_records(records)
+    search = params[:search]
+    search_value = search[:value] if search.respond_to?(:key?)
+    terms = search_value.to_s.split
+    terms.reduce(records) do |scope, term|
+      scope.where(TERM_CONDITION, term: "%#{ActiveRecord::Base.sanitize_sql_like(term)}%")
+    end
+  end
+
+  # The gem trusts DataTables' request params: a missing order[i][dir] raises
+  # NoMethodError and a negative start/length reaches Postgres. Normalize them.
+  def sanitize_params(params)
+    params = params.deep_dup
+    params[:start] = [params[:start].to_i, 0].max if params.key?(:start)
+    if params.key?(:length)
+      length = params[:length].to_i
+      params[:length] = length.between?(1, MAX_PAGE_LENGTH) ? length : DEFAULT_PAGE_LENGTH
+    end
+    params[:order] = sanitize_order(params[:order]) if params.key?(:order)
+    params[:columns] = sanitize_columns(params[:columns]) if params.key?(:columns)
+    params
+  end
+
+  def sanitize_columns(columns)
+    return {} unless columns.respond_to?(:each_pair)
+
+    columns.each_pair.select do |_index, options|
+      options.respond_to?(:key?) && view_columns.key?(options[:data].to_s.to_sym)
+    end.to_h
+  end
+
+  def sanitize_order(order)
+    return {} unless order.respond_to?(:each_pair)
+
+    order.each_pair.with_object({}) do |(index, options), sanitized|
+      next unless options.respond_to?(:key?) && options[:column].present?
+
+      dir = options[:dir].to_s.downcase == "desc" ? "desc" : "asc"
+      sanitized[index] = { column: options[:column].to_s, dir: }
+    end
   end
 
   def name_link(record)
@@ -50,9 +95,11 @@ class SchoolDatatable < AjaxDatatablesRails::ActiveRecord
   end
 
   def website_link(record)
-    url = record.website
-    display = url.to_s.truncate(30)
-    "<a href=\"#{ERB::Util.html_escape(url)}\" target=\"_blank\">#{ERB::Util.html_escape(display)}</a>".html_safe
+    url = ApplicationHelper.safe_link_url(record.website)
+    display = ERB::Util.html_escape(record.website.to_s.truncate(30))
+    return display unless url
+
+    "<a href=\"#{ERB::Util.html_escape(url)}\" target=\"_blank\" rel=\"noopener noreferrer\">#{display}</a>".html_safe
   end
 
   def action_links(record)

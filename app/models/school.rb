@@ -121,6 +121,25 @@ class School < ApplicationRecord
     School.school_types.map { |key, _val| [key.to_s.titlecase, key] }
   end
 
+  # Mirrors the columns of the admin schools table.
+  CSV_EXPORT_COLUMNS = {
+    "Name" => :name,
+    "Location" => :location,
+    "Country" => :country,
+    "Website" => :website,
+    "Teachers" => :teachers_count,
+    "Grade Level" => :display_grade_level,
+  }.freeze
+
+  def self.csv_export
+    CSV.generate(headers: true) do |csv|
+      csv << CSV_EXPORT_COLUMNS.keys
+      order(:name).each do |school|
+        csv << CSV_EXPORT_COLUMNS.values.map { |attr| school.public_send(attr) }
+      end
+    end
+  end
+
   def self.all_maps_data
     validated.map(&:maps_marker_data).to_json
   end
@@ -132,7 +151,7 @@ class School < ApplicationRecord
 
   def prefix_url(url)
     return unless url
-    url.match?(/^https?:/) ? url : "https://#{url}"
+    url.match?(/\Ahttps?:/i) ? url : "https://#{url}"
   end
 
   def maps_api_location
