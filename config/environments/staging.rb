@@ -91,8 +91,16 @@ Rails.application.configure do
   # Email settings
   # Do not send emails in staging environment, and do not raise errors
   config.action_mailer.raise_delivery_errors = false
+  # Never default to the production host: links in staging emails would point
+  # at production. Set APP_HOST on the staging app. Heroku's dyno metadata
+  # (HEROKU_APP_DEFAULT_DOMAIN_NAME) is used if present; otherwise links use a
+  # reserved, unresolvable host so a missing config is obvious but boot (and
+  # the release phase) still succeeds.
+  staging_host = ENV["APP_HOST"].presence ||
+                 ENV["HEROKU_APP_DEFAULT_DOMAIN_NAME"].presence ||
+                 "app-host-not-set.invalid"
   config.action_mailer.default_url_options = {
-    host: ENV.fetch("APP_HOST", "teachers.bjc.berkeley.edu"),
+    host: staging_host,
     protocol: ENV.fetch("APP_PROTOCOL", "https")
   }
   config.action_mailer.default_url_options[:port] = ENV["APP_PORT"].to_i if ENV["APP_PORT"].present?

@@ -13,9 +13,7 @@ module SeedData
     <p>Thank you! <br />&mdash; The BJC Team</p>
   WELCOME_EMAIL
 
-  @form_submission = <<-FORM_SUBMISSION
-    <p>
-      View form submission {{view_teacher_url}}<br>
+  @form_submission_details = <<-FORM_SUBMISSION_DETAILS
       Here is the information that was submitted: <br>
       Name: {{teacher_first_name}} {{teacher_last_name}} <br>
       Email: {{teacher_email}} <br>
@@ -23,8 +21,24 @@ module SeedData
       School: {{teacher_school_name}} <br>
       Location: {{teacher_school_city}}, {{teacher_school_state}} <br>
       Website: {{ teacher_school_website | link_to(nil, teacher_school_website) }}
-    </p>
+  FORM_SUBMISSION_DETAILS
+
+  # Sent to the admins. {{view_teacher_url}} links to the admin-only teacher page.
+  @form_submission = <<-FORM_SUBMISSION
+    <p>
+      <a href="{{view_teacher_url}}">View form submission</a><br>
+#{@form_submission_details}    </p>
   FORM_SUBMISSION
+
+  # Sent to the applicant. Teachers can't open the admin page, so link to
+  # their own edit page instead.
+  @teacher_form_submission = <<-TEACHER_FORM_SUBMISSION
+    <p>
+#{@form_submission_details}    </p>
+    <p>
+      You can <a href="{{edit_teacher_url}}">review or update your information here</a>.
+    </p>
+  TEACHER_FORM_SUBMISSION
 
   @basic_email_with_reason = <<-DENY_EMAIL
     <p>
@@ -113,7 +127,7 @@ module SeedData
       },
       { # teacher form submission email
         to: @default_to_field,
-        body: @form_submission,
+        body: @teacher_form_submission,
         path: "teacher_mailer/teacher_form_submission",
         locale: nil,
         handler: "liquid",
