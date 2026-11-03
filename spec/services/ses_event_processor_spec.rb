@@ -48,6 +48,21 @@ RSpec.describe SesEventProcessor, type: :service do
       it "increments emails_delivered" do
         expect { process("delivery") }.to change { email.reload.emails_delivered }.by(1)
       end
+
+      it "counts only delivery.recipients, not every address in mail.destination" do
+        event = load_event("multi_recipient_delivery")
+        event["delivery"]["recipients"] = ["validated@teacher.edu"]
+        described_class.new(event, sns_message_id: "sns-partial").call
+        expect(email.reload.emails_delivered).to eq(1)
+        expect(bob_email.reload.emails_delivered).to eq(0)
+      end
+
+      it "records nothing when delivery.recipients is missing" do
+        event = load_event("delivery")
+        event["delivery"].delete("recipients")
+        expect { described_class.new(event, sns_message_id: "sns-norecip").call }
+          .not_to change(SesDeliveryEvent, :count)
+      end
     end
 
     context "Bounce event with bounceType = Transient (soft bounce)" do

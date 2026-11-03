@@ -43,6 +43,11 @@ class SesEventProcessor
       Array(ses_event.dig("bounce", "bouncedRecipients")).filter_map { |r| r["emailAddress"] if r.is_a?(Hash) }
     when "Complaint"
       Array(ses_event.dig("complaint", "complainedRecipients")).filter_map { |r| r["emailAddress"] if r.is_a?(Hash) }
+    when "Delivery"
+      # mail.destination lists every To/CC/BCC address, including ones that
+      # bounced or were delivered in a separate event. Only count the
+      # recipients this delivery covers.
+      Array(ses_event.dig("delivery", "recipients"))
     else
       Array(ses_event.dig("mail", "destination"))
     end
