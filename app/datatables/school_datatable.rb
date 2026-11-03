@@ -26,8 +26,10 @@ class SchoolDatatable < AjaxDatatablesRails::ActiveRecord
     records.map do |record|
       {
         name: name_link(record),
-        location: record.location,
-        country: record.country,
+        # DataTables writes cell data as HTML, so every free-text field must be
+        # escaped here (city/state/country come from the public signup form).
+        location: ERB::Util.html_escape(record.location),
+        country: ERB::Util.html_escape(record.country),
         website: website_link(record),
         teachers_count: record.teachers_count,
         grade_level: record.display_grade_level,
