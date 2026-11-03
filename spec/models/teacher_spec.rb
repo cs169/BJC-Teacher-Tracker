@@ -254,6 +254,15 @@ RSpec.describe Teacher, type: :model do
   end
 
   describe ".csv_export" do
+    it "reads SES columns from the preloaded email addresses" do
+      queries = []
+      callback = ->(*, payload) { queries << payload[:sql] if payload[:sql].include?('"email_addresses"') }
+      ActiveSupport::Notifications.subscribed(callback, "sql.active_record") { Teacher.csv_export }
+      primary_lookups = queries.count { |q| q.include?('"email_addresses"."primary" = ') && q.include?("LIMIT") }
+      # primary_email still queries once per teacher; the 3 SES columns add none.
+      expect(primary_lookups).to eq(Teacher.where(admin: false).count)
+    end
+
     it "includes mailbluster_id column" do
       csv = Teacher.csv_export
       expect(csv).to include("mailbluster_id")

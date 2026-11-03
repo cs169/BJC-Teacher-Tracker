@@ -370,7 +370,10 @@ class Teacher < ApplicationRecord
     "https://app.mailbluster.com/leads/#{mailbluster_id}"
   end
 
+  # Use the preloaded association when there is one (Teacher.csv_export
+  # preloads it), so each per-teacher column doesn't run its own query.
   def primary_email_address
+    return email_addresses.find(&:primary?) if email_addresses.loaded?
     email_addresses.find_by(primary: true)
   end
 
