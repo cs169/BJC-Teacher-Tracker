@@ -8,6 +8,15 @@ class SnsMessageVerifier
   # the controller can answer 400 instead of 401.
   class MalformedEnvelopeError < VerificationError; end
 
+  # Real AWS signing certs look like
+  #   https://sns.us-west-2.amazonaws.com/SimpleNotificationService-<hex>.pem
+  # We check this before the SDK sees the envelope, because the SDK downloads
+  # the URL (and caches it forever) before checking any signature. Anchored and
+  # matched against the raw string, so ports, userinfo, queries and fragments
+  # are all rejected.
+  SIGNING_CERT_URL_PATTERN = %r{\Ahttps://sns\.([a-z0-9-]+)\.amazonaws\.com/SimpleNotificationService-[a-f0-9]+\.pem\z}
+  TOPIC_ARN_REGION_PATTERN = /\Aarn:aws:sns:([a-z0-9-]+):/
+
   AWS_VERIFIER_LOCK = Mutex.new
   private_constant :AWS_VERIFIER_LOCK
 
@@ -37,6 +46,7 @@ class SnsMessageVerifier
   def verify!
     envelope = parse_envelope
     assert_topic_allowed!(envelope["TopicArn"])
+    assert_signing_cert_url_valid!(envelope["SigningCertURL"], envelope["TopicArn"])
     assert_signature_valid!(envelope)
     envelope
   end
@@ -55,6 +65,13 @@ class SnsMessageVerifier
   def assert_topic_allowed!(topic_arn)
     return if topic_arn.present? && allowed_topic_arns.include?(topic_arn)
     raise VerificationError, "Topic ARN #{topic_arn.inspect} is not in the allowlist"
+  end
+
+  def assert_signing_cert_url_valid!(cert_url, topic_arn)
+    cert_region = cert_url.is_a?(String) && cert_url[SIGNING_CERT_URL_PATTERN, 1]
+    topic_region = topic_arn.to_s[TOPIC_ARN_REGION_PATTERN, 1]
+    return if cert_region && cert_region == topic_region
+    raise VerificationError, "SigningCertURL #{cert_url.to_s.truncate(200).inspect} is not a valid SNS cert URL for this topic"
   end
 
   def assert_signature_valid!(envelope)

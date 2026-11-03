@@ -21,7 +21,7 @@ RSpec.describe Webhooks::SesNotificationsController, type: :request do
       "Timestamp" => "2026-04-23T10:00:00.000Z",
       "SignatureVersion" => "1",
       "Signature" => "stubbed",
-      "SigningCertURL" => "https://sns.us-west-2.amazonaws.com/SimpleNotificationService-xxx.pem"
+      "SigningCertURL" => "https://sns.us-west-2.amazonaws.com/SimpleNotificationService-0123456789abcdef0123456789abcdef.pem"
     }
   end
 
@@ -143,7 +143,7 @@ RSpec.describe Webhooks::SesNotificationsController, type: :request do
           "Timestamp" => "2026-04-23T10:00:00.000Z",
           "SignatureVersion" => "1",
           "Signature" => "stubbed",
-          "SigningCertURL" => "https://sns.us-west-2.amazonaws.com/SimpleNotificationService-xxx.pem"
+          "SigningCertURL" => "https://sns.us-west-2.amazonaws.com/SimpleNotificationService-0123456789abcdef0123456789abcdef.pem"
         }
 
         expect(SnsSubscriptionConfirmer).to receive(:confirm!).with(envelope["SubscribeURL"])
@@ -162,7 +162,7 @@ RSpec.describe Webhooks::SesNotificationsController, type: :request do
           "Timestamp" => "2026-04-23T10:00:00.000Z",
           "SignatureVersion" => "1",
           "Signature" => "stubbed",
-          "SigningCertURL" => "https://sns.us-west-2.amazonaws.com/SimpleNotificationService-xxx.pem"
+          "SigningCertURL" => "https://sns.us-west-2.amazonaws.com/SimpleNotificationService-0123456789abcdef0123456789abcdef.pem"
         }
 
         expect(SesEventProcessor).not_to receive(:new)

@@ -15,7 +15,7 @@ RSpec.describe SnsMessageVerifier, type: :service do
       "Timestamp" => "2026-04-23T10:00:00.000Z",
       "SignatureVersion" => "1",
       "Signature" => "placeholder",
-      "SigningCertURL" => "https://sns.us-west-2.amazonaws.com/SimpleNotificationService-xxx.pem"
+      "SigningCertURL" => "https://sns.us-west-2.amazonaws.com/SimpleNotificationService-0123456789abcdef0123456789abcdef.pem"
     }
   end
 
@@ -47,7 +47,7 @@ RSpec.describe SnsMessageVerifier, type: :service do
       end
     end
 
-    it "wraps unexpected SDK errors (e.g. missing SigningCertURL) as VerificationError" do
+    it "wraps unexpected SDK errors as VerificationError" do
       allow(verifier_double).to receive(:authenticate!).and_raise(URI::InvalidURIError, "bad URI(is not URI?): nil")
 
       expect { described_class.verify!(raw_body) }
@@ -85,6 +85,36 @@ RSpec.describe SnsMessageVerifier, type: :service do
         .and_return(" #{topic_arn} , #{other_topic_arn} ")
 
       expect(described_class.verify!(raw_body)).to eq(envelope)
+    end
+
+    describe "SigningCertURL checks (before the SDK downloads anything)" do
+      let(:good_url) { "https://sns.us-west-2.amazonaws.com/SimpleNotificationService-0123456789abcdef0123456789abcdef.pem" }
+
+      [
+        "https://sns.us-west-2.amazonaws.com:8443/SimpleNotificationService-0123456789abcdef.pem",
+        "https://sns.us-west-2.amazonaws.com/SimpleNotificationService-0123456789abcdef.pem?n=1",
+        "https://sns.us-west-2.amazonaws.com/SimpleNotificationService-0123456789abcdef.pem#x",
+        "https://user@sns.us-west-2.amazonaws.com/SimpleNotificationService-0123456789abcdef.pem",
+        "http://sns.us-west-2.amazonaws.com/SimpleNotificationService-0123456789abcdef.pem",
+        "https://sns.us-west-2.amazonaws.com/other/SimpleNotificationService-0123456789abcdef.pem",
+        "https://sns.us-west-2.amazonaws.com.evil.example/SimpleNotificationService-0123456789abcdef.pem",
+        "https://sns.us-east-1.amazonaws.com/SimpleNotificationService-0123456789abcdef.pem", # region != topic's
+        "https://sns.us-west-2.amazonaws.com/SimpleNotificationService-0123456789abcdef.pem\nx",
+        nil,
+        123
+      ].each do |url|
+        it "rejects #{url.inspect} without calling the SDK" do
+          envelope["SigningCertURL"] = url
+          expect { described_class.verify!(envelope.to_json) }
+            .to raise_error(SnsMessageVerifier::VerificationError, /SigningCertURL/)
+          expect(verifier_double).not_to have_received(:authenticate!)
+        end
+      end
+
+      it "accepts a well-formed cert URL in the topic's region" do
+        envelope["SigningCertURL"] = good_url
+        expect(described_class.verify!(envelope.to_json)).to eq(envelope)
+      end
     end
 
     it "raises VerificationError when the allowlist is empty" do
