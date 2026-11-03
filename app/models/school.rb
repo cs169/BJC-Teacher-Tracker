@@ -135,7 +135,7 @@ class School < ApplicationRecord
     CSV.generate(headers: true) do |csv|
       csv << CSV_EXPORT_COLUMNS.keys
       order(:name).each do |school|
-        csv << CSV_EXPORT_COLUMNS.values.map { |attr| school.public_send(attr) }
+        csv << SafeCsv.row(CSV_EXPORT_COLUMNS.values.map { |attr| school.public_send(attr) })
       end
     end
   end

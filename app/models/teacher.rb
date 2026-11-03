@@ -356,7 +356,7 @@ class Teacher < ApplicationRecord
       csv << attributes
 
       Teacher.where(admin: false).includes(:email_addresses).find_each do |user|
-        csv << attributes.map { |attr| user.send(attr) }
+        csv << SafeCsv.row(attributes.map { |attr| user.send(attr) })
       end
     end
   end
