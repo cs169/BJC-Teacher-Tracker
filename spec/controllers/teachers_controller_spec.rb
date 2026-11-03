@@ -592,6 +592,32 @@ RSpec.describe TeachersController, type: :controller do
       }
     end
 
+    it "unsyncs when status changes away from validated" do
+      teacher = Teacher.find_by(first_name: "Validated")
+      allow(MailblusterService).to receive(:configured?).and_return(true)
+      expect(MailblusterService).to receive(:create_or_update_lead).with(teacher)
+
+      put :update, params: {
+        id: teacher.id,
+        teacher: { application_status: "denied", school_id: teacher.school_id },
+        skip_email: "Yes"
+      }
+      expect(teacher.reload).to be_denied
+    end
+
+    it "does not sync when the save fails" do
+      teacher = Teacher.find_by(first_name: "Short")
+      allow(MailblusterService).to receive(:configured?).and_return(true)
+      expect(MailblusterService).not_to receive(:create_or_update_lead)
+
+      put :update, params: {
+        id: teacher.id,
+        teacher: { application_status: "validated", first_name: "", school_id: teacher.school_id },
+        skip_email: "Yes"
+      }
+      expect(teacher.reload).not_to be_validated
+    end
+
     it "does not sync when status does not change" do
       teacher = Teacher.find_by(first_name: "Validated")
       allow(MailblusterService).to receive(:configured?).and_return(true)

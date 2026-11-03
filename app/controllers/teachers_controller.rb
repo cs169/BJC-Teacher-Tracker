@@ -133,11 +133,13 @@ class TeachersController < ApplicationController
 
     attach_new_files_if_any
     send_email_if_application_status_changed_and_email_resend_enabled
-    sync_to_mailbluster_if_status_changed
 
     if fail_to_update
       return
     end
+
+    # Only after a successful save, so MailBluster never sees a status the DB rejected.
+    sync_to_mailbluster_if_status_changed
 
     if !@teacher.validated? && !current_user.admin?
       TeacherMailer.form_submission(@teacher).deliver_now
@@ -167,11 +169,11 @@ class TeachersController < ApplicationController
 
   def sync_to_mailbluster_if_status_changed
     return unless MailblusterService.configured?
-    return unless @teacher.application_status_changed?
+    return unless @teacher.saved_change_to_application_status?
 
     if @teacher.validated?
       MailblusterService.create_or_update_lead(@teacher)
-    elsif @teacher.application_status_was == "validated"
+    elsif @teacher.application_status_before_last_save == "validated"
       # If teacher was validated but status changed away, update MailBluster
       # to mark them as unsubscribed
       MailblusterService.create_or_update_lead(@teacher)

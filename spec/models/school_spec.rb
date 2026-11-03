@@ -30,5 +30,12 @@ RSpec.describe School, type: :model do
       expect(csv.headers).to eq School::CSV_EXPORT_COLUMNS.keys
       expect(csv.map { |row| row["Name"] }).to match_array(School.pluck(:name))
     end
+
+    it "neutralizes spreadsheet formulas in free-text fields" do
+      School.first.update_columns(name: "=HYPERLINK(\"https://evil.example\")", city: "+cmd")
+      row = CSV.parse(School.csv_export, headers: true).find { |r| r["Name"].include?("HYPERLINK") }
+      expect(row["Name"]).to eq("'=HYPERLINK(\"https://evil.example\")")
+      expect(row["Location"]).to start_with("'+cmd")
+    end
   end
 end

@@ -318,6 +318,22 @@ RSpec.describe "Schools DataTables JSON API", type: :request do
       expect(entry["actions"]).to include(edit_school_path(school))
     end
 
+    it "HTML-escapes free-text location and country fields" do
+      school = School.create!(
+        name: "Escape High", city: "<img src=x onerror=alert(1)>", state: "<b>NSW</b>",
+        country: "AU", website: "https://escape.edu",
+        grade_level: :high_school, school_type: :public
+      )
+      # Country is validated against a list, so bypass validation to cover the escape too.
+      school.update_column(:country, "<script>x</script>")
+      get schools_path(format: :json), params: datatable_params
+      entry = JSON.parse(response.body)["data"].find { |d| d["DT_RowId"].to_i == school.id }
+      expect(entry["location"]).not_to include("<img")
+      expect(entry["location"]).not_to include("<b>")
+      expect(entry["location"]).to include("&lt;img src=x onerror=alert(1)&gt;")
+      expect(entry["country"]).to eq("&lt;script&gt;x&lt;/script&gt;")
+    end
+
     it "filters by name" do
       School.create!(
         name: "Unique Zebra School", city: "Denver", state: "CO",
